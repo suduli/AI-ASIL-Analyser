@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 26262 ASIL Analyzer v5 - AI-Enhanced Automotive Safety Platform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="animated-background"></div>
+    
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header__content">
+                <div class="header__top">
+                    <h1 class="header__title">ISO 26262 ASIL Analyzer</h1>
+                    <div class="header__controls">
+                        <button type="button" id="settings-btn" class="settings-btn" title="AI Settings">
+                            <span class="settings-icon">⚙️</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="header__subtitle">v5.0 - AI Enhanced</div>
+                <p class="header__description">Next-Generation Automotive Safety Integrity Level Determination with AI Validation</p>
+                <div class="header__tech-line"></div>
+            </div>
+        </header>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h2 class="modal-title">🤖 AI Provider Settings</h2>
+                    <button type="button" id="close-modal" class="modal-close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3 class="settings-title">AI Provider Selection</h3>
+                        <div class="provider-options">
+                            <label class="radio-option">
+                                <input type="radio" name="ai-provider" value="openai" checked>
+                                <span class="radio-custom"></span>
+                                <span class="radio-label">OpenAI GPT-4</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="ai-provider" value="anthropic">
+                                <span class="radio-custom"></span>
+                                <span class="radio-label">Anthropic Claude</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="settings-title">API Configuration</h3>
+                        <div class="api-config">
+                            <div class="form-group">
+                                <label for="openai-key" class="form-label">OpenAI API Key</label>
+                                <input type="password" id="openai-key" class="form-control api-key-input" placeholder="sk-..." />
+                            </div>
+                            <div class="form-group">
+                                <label for="anthropic-key" class="form-label">Anthropic API Key</label>
+                                <input type="password" id="anthropic-key" class="form-control api-key-input" placeholder="sk-ant-..." />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="settings-title">Auto-Learning</h3>
+                        <label class="toggle-option">
+                            <input type="checkbox" id="auto-learn" />
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Auto-write AI-validated results to database after confirmation</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="save-settings" class="btn btn--primary">Save Settings</button>
+                    <button type="button" id="cancel-settings" class="btn btn--secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <section class="input-section">
+            <div class="card glass-panel">
+                <div class="card__body">
+                    <h2 class="section-title">Component Analysis Hub</h2>
+                    
+                    <!-- Quick Database Browse -->
+                    <div class="form-group">
+                        <label for="database-select" class="form-label futuristic-label">
+                            <span class="label-icon">🗃️</span>
+                            Quick Select from Database (Instant Results)
+                        </label>
+                        <select id="database-select" class="form-control futuristic-input">
+                            <option value="">Choose from known automotive components...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Input with Auto-suggest -->
+                    <div class="form-group">
+                        <label for="component-input" class="form-label futuristic-label">
+                            <span class="label-icon">🔍</span>
+                            Or Enter Component Name
+                        </label>
+                        <div class="input-container">
+                            <input type="text" id="component-input" class="form-control futuristic-input" placeholder="e.g., body control module, brake system, power steering..." />
+                            <div class="input-glow"></div>
+                        </div>
+                        <div class="analysis-controls">
+                            <button type="button" id="analyze-btn" class="btn btn--primary futuristic-btn">
+                                <span class="btn-bg"></span>
+                                <span class="btn-content">
+                                    <span id="analyze-text">⚡ Analyze with AI Validation</span>
+                                    <span id="analyze-spinner" class="spinner hidden">🔄 Analyzing...</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Discrepancy Warning Banner -->
+                    <div id="discrepancy-banner" class="discrepancy-banner glass-panel hidden">
+                        <div class="banner-content">
+                            <div class="banner-icon">⚠️</div>
+                            <div class="banner-text">
+                                <h4>Database vs AI Discrepancy Detected</h4>
+                                <p id="discrepancy-details"></p>
+                            </div>
+                            <button type="button" id="adopt-ai-btn" class="btn btn--primary adopt-btn">
+                                <span>Adopt AI Values</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="help-text glass-panel">
+                        <div class="help-icon">💡</div>
+                        <small>Enhanced with AI validation - configure your preferred AI provider in settings. Database results are shown instantly, then validated against AI analysis for accuracy verification.</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section class="comparison-section" id="comparison-section" style="display: none;">
+            <div class="comparison-grid">
+                <!-- Database Results -->
+                <div class="comparison-card glass-panel">
+                    <div class="card__header">
+                        <h3 class="comparison-title">
+                            <span class="source-icon db-icon">🗃️</span>
+                            Database Result
+                        </h3>
+                        <div class="data-source-pill database">
+                            <div class="pill-glow"></div>
+                            <span>Database</span>
+                        </div>
+                    </div>
+                    <div class="card__body">
+                        <div class="result-display" id="db-result">
+                            <div class="asil-badge" id="db-asil">QM</div>
+                            <div class="parameters" id="db-params">
+                                <span class="param">S0</span>
+                                <span class="param">E1</span>
+                                <span class="param">C1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Results -->
+                <div class="comparison-card glass-panel">
+                    <div class="card__header">
+                        <h3 class="comparison-title">
+                            <span class="source-icon ai-icon">🤖</span>
+                            AI Analysis
+                        </h3>
+                        <div class="data-source-pill ai" id="ai-provider-pill">
+                            <div class="pill-glow"></div>
+                            <span id="ai-provider-name">OpenAI GPT-4</span>
+                        </div>
+                    </div>
+                    <div class="card__body">
+                        <div class="result-display" id="ai-result">
+                            <div class="loading-state" id="ai-loading">
+                                <div class="ai-spinner"></div>
+                                <span>AI Analysis in Progress...</span>
+                            </div>
+                            <div class="result-content hidden" id="ai-content">
+                                <div class="asil-badge" id="ai-asil">QM</div>
+                                <div class="parameters" id="ai-params">
+                                    <span class="param">S0</span>
+                                    <span class="param">E1</span>
+                                    <span class="param">C1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Analysis Section -->
+        <section class="analysis-section" id="analysis-section" style="display: none;">
+            <div class="card glass-panel">
+                <div class="card__body">
+                    <h2 class="section-title">ISO 26262 Analysis & Reasoning</h2>
+                    <div class="analysis-content glass-inner">
+                        <div class="component-info">
+                            <div class="component-header">
+                                <h3 class="component-name">Component: <span id="analyzed-component"></span></h3>
+                                <div class="data-source-pill" id="data-source-pill">
+                                    <div class="pill-glow"></div>
+                                    <span id="source-text">Database</span>
+                                </div>
+                            </div>
+                            <div class="function-description">
+                                <h4 class="analysis-subtitle">🔧 Function & Failure Modes:</h4>
+                                <p id="function-description"></p>
+                            </div>
+                        </div>
+                        <div class="reasoning-sections">
+                            <div class="reasoning-section severity-reasoning glass-inner">
+                                <h4 class="analysis-subtitle">🚨 Severity Analysis (ISO 26262-3):</h4>
+                                <p id="severity-reasoning"></p>
+                            </div>
+                            <div class="reasoning-section exposure-reasoning glass-inner">
+                                <h4 class="analysis-subtitle">📊 Exposure Analysis (ISO 26262-3):</h4>
+                                <p id="exposure-reasoning"></p>
+                            </div>
+                            <div class="reasoning-section controllability-reasoning glass-inner">
+                                <h4 class="analysis-subtitle">🎛️ Controllability Analysis (ISO 26262-3):</h4>
+                                <p id="controllability-reasoning"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Parameters Table Section -->
+        <section class="parameters-section" id="parameters-section" style="display: none;">
+            <div class="card glass-panel">
+                <div class="card__body">
+                    <h2 class="section-title">Safety Parameters Matrix (ISO 26262)</h2>
+                    <div class="parameters-table">
+                        <div class="table-container">
+                            <table class="param-table futuristic-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Current Level</th>
+                                        <th>ISO 26262 Description</th>
+                                        <th>Modify</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-row">
+                                        <td><strong>🚨 Severity (S)</strong></td>
+                                        <td><span id="current-severity" class="param-badge"></span></td>
+                                        <td><span id="severity-desc"></span></td>
+                                        <td>
+                                            <select id="severity-select" class="form-control param-select futuristic-select">
+                                                <option value="S0">S0 - No Injuries</option>
+                                                <option value="S1">S1 - Light to Moderate Injuries</option>
+                                                <option value="S2">S2 - Severe Injuries (Survival Probable)</option>
+                                                <option value="S3">S3 - Life-threatening to Fatal Injuries</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr class="table-row">
+                                        <td><strong>📊 Exposure (E)</strong></td>
+                                        <td><span id="current-exposure" class="param-badge"></span></td>
+                                        <td><span id="exposure-desc"></span></td>
+                                        <td>
+                                            <select id="exposure-select" class="form-control param-select futuristic-select">
+                                                <option value="E1">E1 - Very Low Probability</option>
+                                                <option value="E2">E2 - Low Probability</option>
+                                                <option value="E3">E3 - Medium Probability</option>
+                                                <option value="E4">E4 - High Probability</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr class="table-row">
+                                        <td><strong>🎛️ Controllability (C)</strong></td>
+                                        <td><span id="current-controllability" class="param-badge"></span></td>
+                                        <td><span id="controllability-desc"></span></td>
+                                        <td>
+                                            <select id="controllability-select" class="form-control param-select futuristic-select">
+                                                <option value="C1">C1 - Simply Controllable (>99% drivers)</option>
+                                                <option value="C2">C2 - Normally Controllable (>90% drivers)</option>
+                                                <option value="C3">C3 - Difficult to Control (<90% drivers)</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ASIL Result Section -->
+        <section class="asil-section" id="asil-section" style="display: none;">
+            <div class="card glass-panel">
+                <div class="card__body">
+                    <h2 class="section-title">ASIL Determination Result</h2>
+                    <div class="asil-result">
+                        <div class="asil-display">
+                            <div class="asil-label">🎯 Determined ASIL Level (ISO 26262-3, Table 4):</div>
+                            <div class="asil-value" id="asil-value">QM</div>
+                            <div class="asil-pulse"></div>
+                        </div>
+                        <div class="asil-info glass-inner" id="asil-info">
+                            <p>Quality Management (QM) - No safety requirements according to ISO 26262</p>
+                        </div>
+                        <div class="calculation-matrix glass-inner">
+                            <h4 class="matrix-title">📐 ASIL Calculation Matrix Position:</h4>
+                            <div class="matrix-display">
+                                <p id="matrix-position">S=<span id="matrix-s"></span>, E=<span id="matrix-e"></span>, C=<span id="matrix-c"></span> → ASIL <span id="matrix-result"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ASIL Matrix Reference -->
+        <section class="matrix-section" id="matrix-section" style="display: none;">
+            <div class="card glass-panel">
+                <div class="card__body">
+                    <h3 class="section-title">📊 ISO 26262 ASIL Determination Matrix</h3>
+                    <div class="matrix-table-container">
+                        <div class="table-wrapper">
+                            <table class="asil-matrix-table futuristic-table">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Severity</th>
+                                        <th colspan="4">Exposure & Controllability</th>
+                                    </tr>
+                                    <tr>
+                                        <th>E1</th>
+                                        <th>E2</th>
+                                        <th>E3</th>
+                                        <th>E4</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>S0</strong></td>
+                                        <td>QM</td>
+                                        <td>QM</td>
+                                        <td>QM</td>
+                                        <td>QM</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>S1</strong></td>
+                                        <td>QM/QM/QM</td>
+                                        <td>QM/QM/QM</td>
+                                        <td>QM/QM/A</td>
+                                        <td>QM/A/B</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>S2</strong></td>
+                                        <td>QM/QM/QM</td>
+                                        <td>QM/QM/A</td>
+                                        <td>QM/A/B</td>
+                                        <td>A/B/C</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>S3</strong></td>
+                                        <td>QM/QM/A</td>
+                                        <td>QM/A/B</td>
+                                        <td>A/B/C</td>
+                                        <td>B/C/D</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="matrix-legend glass-inner">
+                            <p><small>💡 Table shows ASIL for C1/C2/C3 controllability levels respectively</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Legend Section -->
+        <section class="legend-section" id="legend-section" style="display: none;">
+            <div class="card glass-panel">
+                <div class="card__body">
+                    <h3 class="section-title">🏆 ASIL Levels Reference</h3>
+                    <div class="legend-grid">
+                        <div class="legend-item glass-inner">
+                            <span class="legend-badge legend-qm">QM</span>
+                            <span>Quality Management - No ISO 26262 safety requirements</span>
+                        </div>
+                        <div class="legend-item glass-inner">
+                            <span class="legend-badge legend-a">A</span>
+                            <span>ASIL A - Basic safety integrity requirements</span>
+                        </div>
+                        <div class="legend-item glass-inner">
+                            <span class="legend-badge legend-b">B</span>
+                            <span>ASIL B - Medium safety integrity requirements</span>
+                        </div>
+                        <div class="legend-item glass-inner">
+                            <span class="legend-badge legend-c">C</span>
+                            <span>ASIL C - High safety integrity requirements</span>
+                        </div>
+                        <div class="legend-item glass-inner">
+                            <span class="legend-badge legend-d">D</span>
+                            <span>ASIL D - Highest safety integrity requirements</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
