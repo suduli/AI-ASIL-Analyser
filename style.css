@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  background: url('assets/bg-grid.svg') repeat, radial-gradient(circle at top, #0a0f1f, #000);
+  color: white;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em;
+  background: rgba(0,0,0,0.5);
+}
+
+.logo {
+  height: 40px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+button {
+  background: linear-gradient(90deg, #00f0ff, #00ff88);
+  border: none;
+  color: black;
+  padding: 0.5em 1em;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1em;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+main {
+  display: grid;
+  gap: 1em;
+  padding: 1em;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+th, td {
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding: 0.5em;
+}
+
+.asil-badge {
+  font-weight: bold;
+  padding: 0.3em 0.5em;
+  border-radius: 5px;
+  background: #00f0ff;
+  color: black;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100%; width: 100%;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center; justify-content: center;
+}
+
+.modal-content {
+  padding: 2em;
+  width: 300px;
+}
+
+.modal-content label {
+  display: block;
+  margin: 0.5em 0;
+}
