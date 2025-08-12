@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ASIL Calculator - ISO 26262</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="components_db.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" alt="ASIL Logo" class="logo">
+    <h1>ASIL Calculator</h1>
+    <button id="settingsBtn">⚙️</button>
+  </header>
+
+  <main>
+    <section class="input-section glass">
+      <h2>Enter Feature / Component</h2>
+      <input type="text" id="featureInput" placeholder="e.g., Brake System" list="componentList">
+      <datalist id="componentList"></datalist>
+      <button id="analyzeBtn">Analyze</button>
+    </section>
+
+    <section class="results-section glass">
+      <h2>Analysis Results</h2>
+      <div id="sourceTag"></div>
+      <div id="reasoning"></div>
+
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
+        </thead>
+        <tbody id="secTable"></tbody>
+      </table>
+
+      <div class="asil-output">
+        <span>ASIL Level:</span>
+        <span id="asilLevel" class="asil-badge"></span>
+      </div>
+    </section>
+
+    <section class="adjustment-section glass">
+      <h2>Adjust Values Manually</h2>
+      <label>Severity (S)
+        <select id="severitySelect"></select>
+      </label>
+      <label>Exposure (E)
+        <select id="exposureSelect"></select>
+      </label>
+      <label>Controllability (C)
+        <select id="controllabilitySelect"></select>
+      </label>
+    </section>
+  </main>
+
+  <div id="settingsModal" class="modal">
+    <div class="modal-content glass">
+      <span id="closeModal">&times;</span>
+      <h2>AI Provider Settings</h2>
+      <label>Choose AI Provider:
+        <select id="aiProvider">
+          <option value="openai">OpenAI GPT-4</option>
+          <option value="claude">Anthropic Claude</option>
+        </select>
+      </label>
+      <label>API Key:
+        <input type="password" id="apiKeyInput">
+      </label>
+      <label>
+        <input type="checkbox" id="autoLearn">
+        Auto-learn from AI
+      </label>
+      <button id="saveSettings">Save Settings</button>
+    </div>
+  </div>
+</body>
+</html>
