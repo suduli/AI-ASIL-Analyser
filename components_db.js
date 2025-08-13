@@ -836,3 +836,79 @@ const componentsDB = {
     }
   }
 };
+
+// Export for use in main application
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { componentsDB };
+} else if (typeof window !== 'undefined') {
+  window.componentsDB = componentsDB;
+}
+
+/**
+ * Utility function to get all component names for autocomplete
+ * @returns {Array<string>} Array of all component names
+ */
+function getAllComponentNames() {
+  return Object.keys(componentsDB).sort();
+}
+
+/**
+ * Utility function to filter components by ASIL level
+ * @param {string} asilLevel - ASIL level to filter by (QM, A, B, C, D)
+ * @returns {Array<string>} Array of component names with specified ASIL level
+ */
+function getComponentsByASIL(asilLevel) {
+  return Object.keys(componentsDB)
+    .filter(component => componentsDB[component].asil === asilLevel)
+    .sort();
+}
+
+/**
+ * Utility function to get components by category (based on naming patterns)
+ * @param {string} category - Category keyword to search for
+ * @returns {Array<string>} Array of component names containing the category keyword
+ */
+function getComponentsByCategory(category) {
+  const searchTerm = category.toLowerCase();
+  return Object.keys(componentsDB)
+    .filter(component => component.toLowerCase().includes(searchTerm))
+    .sort();
+}
+
+/**
+ * Statistics about the components database
+ * @returns {Object} Statistics object with counts and distributions
+ */
+function getDatabaseStatistics() {
+  const components = Object.values(componentsDB);
+  const totalComponents = components.length;
+  
+  // Count by ASIL level
+  const asilCounts = {};
+  components.forEach(comp => {
+    asilCounts[comp.asil] = (asilCounts[comp.asil] || 0) + 1;
+  });
+  
+  // Count by severity level
+  const severityCounts = {};
+  components.forEach(comp => {
+    const sLevel = `S${comp.S}`;
+    severityCounts[sLevel] = (severityCounts[sLevel] || 0) + 1;
+  });
+  
+  return {
+    totalComponents,
+    asilDistribution: asilCounts,
+    severityDistribution: severityCounts,
+    highestRiskComponents: getComponentsByASIL('D'),
+    lowestRiskComponents: getComponentsByASIL('QM')
+  };
+}
+
+// Make utility functions available globally
+if (typeof window !== 'undefined') {
+  window.getAllComponentNames = getAllComponentNames;
+  window.getComponentsByASIL = getComponentsByASIL;
+  window.getComponentsByCategory = getComponentsByCategory;
+  window.getDatabaseStatistics = getDatabaseStatistics;
+}
