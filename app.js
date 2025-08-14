@@ -1,1127 +1,1099 @@
-// ISO 26262 ASIL Analyzer v5 - AI Enhanced with Provider Selection
-// Professional Automotive Safety Tool with AI Validation and Database Sync
+// Enhanced ASIL Calculator App.js with Components Database Integration
+// ISO 26262 Compliant ASIL Determination System
 
-// AI Provider Configuration (Session Memory Only - Never Persisted)
-let aiSettings = {
-  provider: 'openai', // default provider
-  apiKeys: {
-    openai: '',
-    anthropic: ''
+// Import the components database (assuming components_db.js is included separately)
+// This will be loaded from components_db.js file
+
+class ASILCalculator {
+    constructor() {
+        this.currentComponent = null;
+        this.currentParameters = { S: 0, E: 1, C: 1 };
+        this.aiConfig = JSON.parse(localStorage.getItem('aiConfig')) || { provider: null, apiKey: null };
+        this.autoLearn = JSON.parse(localStorage.getItem('autoLearn')) || { enabled: false, requireConfirmation: true };
+        
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.populateComponentDropdown();
+        this.setupSettingsModal();
+        this.updateASILMatrix();
+        this.loadTheme();
+    }
+
+    // ASIL Determination Matrix based on ISO 26262
+    getASILLevel(S, E, C) {
+        const matrix = {
+            0: { 1: 'QM', 2: 'QM', 3: 'QM', 4: 'QM' },
+            1: { 1: 'A', 2: 'A', 3: 'B', 4: 'B' },
+            2: { 1: 'B', 2: 'B', 3: 'C', 4: 'C' },
+            3: { 1: 'C', 2: 'C', 3: 'D', 4: 'D' }
+        };
+        return matrix[S][E];
+    }
+
+    // Enhanced parameter descriptions with ISO 26262 compliance
+    getParameterDescriptions() {
+        return {
+            severity: {
+                0: {
+                    title: 'S0 - No Injuries',
+                    description: 'No injuries. The failure has no potential to cause harm to persons.',
+                    examples: ['Comfort features failure', 'Entertainment system malfunction', 'Minor lighting issues']
+                },
+                1: {
+                    title: 'S1 - Light to Moderate Injuries',
+                    description: 'Light to moderate injuries. The failure may cause minor physical harm.',
+                    examples: ['Power window malfunction', 'Climate control failure', 'Non-critical warning light failure']
+                },
+                2: {
+                    title: 'S2 - Severe to Life-threatening Injuries',
+                    description: 'Severe to life-threatening injuries (survival probable). The failure may cause significant physical harm.',
+                    examples: ['Airbag deployment failure', 'Seatbelt system malfunction', 'Anti-lock braking system failure']
+                },
+                3: {
+                    title: 'S3 - Life-threatening to Fatal Injuries',
+                    description: 'Life-threatening to fatal injuries (survival uncertain). The failure may cause death or severe harm.',
+                    examples: ['Primary brake system failure', 'Steering system complete loss', 'Unintended acceleration']
+                }
+            },
+            exposure: {
+                1: {
+                    title: 'E1 - Very Low Probability',
+                    description: 'Very low probability of exposure to the operational situation. Less than 1% of operating time.',
+                    examples: ['Parking assistance systems', 'Hill start assist', 'Trailer tow assistance']
+                },
+                2: {
+                    title: 'E2 - Low Probability',
+                    description: 'Low probability of exposure to the operational situation. 1% to 10% of operating time.',
+                    examples: ['Lane departure warning', 'Automatic high beam', 'Rain sensing wipers']
+                },
+                3: {
+                    title: 'E3 - Medium Probability',
+                    description: 'Medium probability of exposure to the operational situation. 10% to 50% of operating time.',
+                    examples: ['Adaptive cruise control', 'Electronic stability control', 'Collision avoidance systems']
+                },
+                4: {
+                    title: 'E4 - High Probability',
+                    description: 'High probability of exposure to the operational situation. More than 50% of operating time.',
+                    examples: ['Engine control unit', 'Transmission control', 'Primary braking system']
+                }
+            },
+            controllability: {
+                1: {
+                    title: 'C1 - Controllable in General',
+                    description: 'Controllable in general. More than 99% of drivers can cope with the situation.',
+                    examples: ['Power steering assist loss at low speeds', 'Gradual brake fade warning', 'Engine power reduction with warning']
+                },
+                2: {
+                    title: 'C2 - Simply Controllable',
+                    description: 'Simply controllable. More than 90% of drivers can cope with the situation.',
+                    examples: ['Sudden loss of power steering', 'Brake assist failure', 'Transmission harsh shifting']
+                },
+                3: {
+                    title: 'C3 - Difficult to Control or Uncontrollable',
+                    description: 'Difficult to control or uncontrollable. Less than 90% of drivers can cope with the situation.',
+                    examples: ['Complete brake failure', 'Unintended acceleration', 'Sudden steering lock']
+                }
+            }
+        };
+    }
+
+    // Populate component dropdown from database
+    populateComponentDropdown() {
+        const dropdown = document.getElementById('component-select');
+        if (!dropdown) return;
+
+        // Clear existing options
+        dropdown.innerHTML = '<option value="">Select a component...</option>';
+
+        // Check if componentsDB is available
+        if (typeof componentsDB !== 'undefined') {
+            Object.keys(componentsDB).sort().forEach(component => {
+                const option = document.createElement('option');
+                option.value = component;
+                option.textContent = component.charAt(0).toUpperCase() + component.slice(1).replace(/_/g, ' ');
+                dropdown.appendChild(option);
+            });
+        }
+    }
+
+    // Load component from database
+    loadComponent(componentName) {
+        if (typeof componentsDB === 'undefined' || !componentsDB[componentName]) {
+            this.showError('Component not found in database');
+            return;
+        }
+
+        const component = componentsDB[componentName];
+        this.currentComponent = componentName;
+        this.currentParameters = {
+            S: component.S,
+            E: component.E,
+            C: component.C
+        };
+
+        this.updateParameterInputs();
+        this.updateASILMatrix();
+        this.showComponentAnalysis(componentName, component);
+    }
+
+    // Show detailed component analysis
+    showComponentAnalysis(componentName, component) {
+        const analysisContainer = document.getElementById('analysis-container');
+        if (!analysisContainer) return;
+
+        const asil = this.getASILLevel(component.S, component.E, component.C);
+        const descriptions = this.getParameterDescriptions();
+
+        analysisContainer.innerHTML = `
+            <div class="component-analysis">
+                <div class="analysis-header">
+                    <h3>Component Analysis: ${componentName.replace(/_/g, ' ').toUpperCase()}</h3>
+                    <div class="asil-badge asil-${asil.toLowerCase()}">${asil}</div>
+                </div>
+                
+                <div class="parameter-analysis">
+                    <div class="parameter-card severity">
+                        <div class="parameter-header">
+                            <span class="parameter-icon">⚠️</span>
+                            <h4>Severity Analysis (S${component.S})</h4>
+                        </div>
+                        <div class="parameter-content">
+                            <h5>${descriptions.severity[component.S].title}</h5>
+                            <p>${descriptions.severity[component.S].description}</p>
+                            ${component.reasons && component.reasons.S ? 
+                                `<div class="component-reasoning">
+                                    <strong>Component-specific reasoning:</strong>
+                                    <p>${component.reasons.S}</p>
+                                </div>` : ''}
+                            <div class="examples">
+                                <strong>Typical examples:</strong>
+                                <ul>
+                                    ${descriptions.severity[component.S].examples.map(ex => `<li>${ex}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="parameter-card exposure">
+                        <div class="parameter-header">
+                            <span class="parameter-icon">📊</span>
+                            <h4>Exposure Analysis (E${component.E})</h4>
+                        </div>
+                        <div class="parameter-content">
+                            <h5>${descriptions.exposure[component.E].title}</h5>
+                            <p>${descriptions.exposure[component.E].description}</p>
+                            ${component.reasons && component.reasons.E ? 
+                                `<div class="component-reasoning">
+                                    <strong>Component-specific reasoning:</strong>
+                                    <p>${component.reasons.E}</p>
+                                </div>` : ''}
+                            <div class="examples">
+                                <strong>Typical examples:</strong>
+                                <ul>
+                                    ${descriptions.exposure[component.E].examples.map(ex => `<li>${ex}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="parameter-card controllability">
+                        <div class="parameter-header">
+                            <span class="parameter-icon">🎮</span>
+                            <h4>Controllability Analysis (C${component.C})</h4>
+                        </div>
+                        <div class="parameter-content">
+                            <h5>${descriptions.controllability[component.C].title}</h5>
+                            <p>${descriptions.controllability[component.C].description}</p>
+                            ${component.reasons && component.reasons.C ? 
+                                `<div class="component-reasoning">
+                                    <strong>Component-specific reasoning:</strong>
+                                    <p>${component.reasons.C}</p>
+                                </div>` : ''}
+                            <div class="examples">
+                                <strong>Typical examples:</strong>
+                                <ul>
+                                    ${descriptions.controllability[component.C].examples.map(ex => `<li>${ex}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="improvement-suggestions">
+                    <h4>🚀 ASIL Enhancement Recommendations</h4>
+                    <div class="suggestions-grid">
+                        ${this.generateImprovementSuggestions(component.S, component.E, component.C, asil)}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        analysisContainer.style.display = 'block';
+        analysisContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Generate improvement suggestions to achieve higher ASIL
+    generateImprovementSuggestions(S, E, C, currentASIL) {
+        const suggestions = [];
+        const currentLevel = this.asilToNumber(currentASIL);
+        
+        // Analyze potential improvements
+        if (S < 3) {
+            const newASIL = this.getASILLevel(S + 1, E, C);
+            if (this.asilToNumber(newASIL) > currentLevel) {
+                suggestions.push({
+                    type: 'severity',
+                    action: 'Increase Severity Classification',
+                    current: `S${S}`,
+                    suggested: `S${S + 1}`,
+                    result: newASIL,
+                    description: 'Consider if the component failure could lead to more severe consequences through system interactions or cascading failures.'
+                });
+            }
+        }
+
+        if (E < 4) {
+            const newASIL = this.getASILLevel(S, E + 1, C);
+            if (this.asilToNumber(newASIL) > currentLevel) {
+                suggestions.push({
+                    type: 'exposure',
+                    action: 'Increase Exposure Assessment',
+                    current: `E${E}`,
+                    suggested: `E${E + 1}`,
+                    result: newASIL,
+                    description: 'Analyze if the operational situation occurs more frequently than initially assessed, considering all driving scenarios.'
+                });
+            }
+        }
+
+        if (C < 3) {
+            const newASIL = this.getASILLevel(S, E, C + 1);
+            if (this.asilToNumber(newASIL) > currentLevel) {
+                suggestions.push({
+                    type: 'controllability',
+                    action: 'Reassess Controllability',
+                    current: `C${C}`,
+                    suggested: `C${C + 1}`,
+                    result: newASIL,
+                    description: 'Evaluate if average drivers can truly control the situation, considering factors like reaction time, skill level, and environmental conditions.'
+                });
+            }
+        }
+
+        // Design-based improvements
+        const designSuggestions = [
+            {
+                type: 'redundancy',
+                action: 'Implement Redundant Systems',
+                description: 'Add backup systems or failsafe mechanisms to reduce the severity of potential failures.',
+                benefit: 'Can justify lower severity classification with proper fail-operational design'
+            },
+            {
+                type: 'warning',
+                action: 'Enhanced Warning Systems',
+                description: 'Implement early warning systems to alert drivers before critical failures occur.',
+                benefit: 'Improves controllability by giving drivers more time to react'
+            },
+            {
+                type: 'degradation',
+                action: 'Graceful Degradation',
+                description: 'Design systems to fail safely with reduced functionality rather than complete failure.',
+                benefit: 'Reduces severity by maintaining essential safety functions'
+            }
+        ];
+
+        return suggestions.map(s => `
+            <div class="suggestion-card ${s.type}">
+                <h5>${s.action}</h5>
+                <div class="parameter-change">
+                    ${s.current && s.suggested ? 
+                        `<span class="current">${s.current}</span> → <span class="suggested">${s.suggested}</span> = <span class="result-asil asil-${s.result.toLowerCase()}">${s.result}</span>` 
+                        : ''}
+                </div>
+                <p>${s.description}</p>
+                ${s.benefit ? `<div class="benefit"><strong>Benefit:</strong> ${s.benefit}</div>` : ''}
+            </div>
+        `).join('') + designSuggestions.map(s => `
+            <div class="suggestion-card ${s.type}">
+                <h5>${s.action}</h5>
+                <p>${s.description}</p>
+                <div class="benefit"><strong>Benefit:</strong> ${s.benefit}</div>
+            </div>
+        `).join('');
+    }
+
+    // Convert ASIL level to number for comparison
+    asilToNumber(asil) {
+        const levels = { 'QM': 0, 'A': 1, 'B': 2, 'C': 3, 'D': 4 };
+        return levels[asil] || 0;
+    }
+
+    // Update parameter inputs
+    updateParameterInputs() {
+        const sInput = document.getElementById('severity-input');
+        const eInput = document.getElementById('exposure-input');
+        const cInput = document.getElementById('controllability-input');
+
+        if (sInput) sInput.value = this.currentParameters.S;
+        if (eInput) eInput.value = this.currentParameters.E;
+        if (cInput) cInput.value = this.currentParameters.C;
+    }
+
+    // Update ASIL matrix visualization
+    updateASILMatrix() {
+        const { S, E, C } = this.currentParameters;
+        const asil = this.getASILLevel(S, E, C);
+        
+        // Update ASIL result display
+        const asilResult = document.getElementById('asil-result');
+        if (asilResult) {
+            asilResult.textContent = asil;
+            asilResult.className = `asil-badge asil-${asil.toLowerCase()}`;
+        }
+
+        // Update matrix visualization
+        this.highlightMatrixCell(S, E);
+        
+        // Update parameter displays
+        this.updateParameterDisplay('severity', S);
+        this.updateParameterDisplay('exposure', E);
+        this.updateParameterDisplay('controllability', C);
+    }
+
+    // Highlight active cell in ASIL matrix
+    highlightMatrixCell(S, E) {
+        const matrix = document.getElementById('asil-matrix');
+        if (!matrix) return;
+
+        // Remove previous highlights
+        matrix.querySelectorAll('.active').forEach(cell => cell.classList.remove('active'));
+        
+        // Add highlight to current cell
+        const cell = matrix.querySelector(`[data-s="${S}"][data-e="${E}"]`);
+        if (cell) cell.classList.add('active');
+    }
+
+    // Update individual parameter display
+    updateParameterDisplay(type, value) {
+        const display = document.getElementById(`${type}-display`);
+        if (!display) return;
+
+        const descriptions = this.getParameterDescriptions();
+        const info = descriptions[type][value];
+        
+        display.innerHTML = `
+            <div class="parameter-info">
+                <h4>${info.title}</h4>
+                <p>${info.description}</p>
+            </div>
+        `;
+    }
+
+    // AI Analysis Integration
+    async analyzeWithAI(componentName) {
+        if (!this.aiConfig.provider || !this.aiConfig.apiKey) {
+            this.showError('Please configure AI settings first');
+            return;
+        }
+
+        this.showLoading('Analyzing with AI...');
+
+        try {
+            const prompt = this.buildAIPrompt(componentName);
+            const response = await this.callAI(prompt);
+            const analysis = this.parseAIResponse(response);
+            
+            this.compareWithDatabase(componentName, analysis);
+            this.hideLoading();
+        } catch (error) {
+            this.hideLoading();
+            this.showError(`AI Analysis failed: ${error.message}`);
+        }
+    }
+
+    // Build AI prompt for analysis
+    buildAIPrompt(componentName) {
+        return `Analyze the automotive component: "${componentName}" for ISO 26262 ASIL determination.
+
+Consider the following:
+1. Severity (S0-S3): Potential harm level if the component fails
+2. Exposure (E1-E4): Probability of exposure to the operational situation
+3. Controllability (C1-C3): Ability of the driver to control the situation
+
+Provide structured response in JSON format:
+{
+  "severity": number (0-3),
+  "exposure": number (1-4),
+  "controllability": number (1-3),
+  "asil": "calculated ASIL level",
+  "reasoning": {
+    "severity": "detailed explanation",
+    "exposure": "detailed explanation", 
+    "controllability": "detailed explanation"
   },
-  autoLearn: false
-};
+  "confidence": "high/medium/low",
+  "recommendations": ["list of safety recommendations"]
+}
 
-// Modular AI Providers (Simulated for Demo)
-const aiProviders = {
-  openai: {
-    name: 'OpenAI GPT-4',
-    model: 'gpt-4o',
-    async analyzeComponent(componentName) {
-      // Simulated OpenAI API call with realistic delay and responses
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-      
-      return this.generateOpenAIResponse(componentName);
-    },
+Focus on automotive safety standards and real-world driving scenarios.`;
+    }
+
+    // Compare AI analysis with database
+    compareWithDatabase(componentName, aiAnalysis) {
+        const dbComponent = typeof componentsDB !== 'undefined' ? componentsDB[componentName] : null;
+        
+        if (!dbComponent) {
+            this.showAIOnlyResults(componentName, aiAnalysis);
+            return;
+        }
+
+        const differences = this.findDifferences(dbComponent, aiAnalysis);
+        this.showComparisonResults(componentName, dbComponent, aiAnalysis, differences);
+    }
+
+    // Find differences between database and AI analysis
+    findDifferences(dbData, aiData) {
+        const diffs = {};
+        
+        if (dbData.S !== aiData.severity) diffs.severity = { db: dbData.S, ai: aiData.severity };
+        if (dbData.E !== aiData.exposure) diffs.exposure = { db: dbData.E, ai: aiData.exposure };
+        if (dbData.C !== aiData.controllability) diffs.controllability = { db: dbData.C, ai: aiData.controllability };
+        
+        return diffs;
+    }
+
+    // Show comparison results
+    showComparisonResults(componentName, dbData, aiData, differences) {
+        const container = document.getElementById('comparison-results');
+        if (!container) return;
+
+        const hasDifferences = Object.keys(differences).length > 0;
+        const dbASIL = this.getASILLevel(dbData.S, dbData.E, dbData.C);
+        const aiASIL = aiData.asil;
+
+        container.innerHTML = `
+            <div class="comparison-container ${hasDifferences ? 'has-differences' : 'matches'}">
+                <h3>Analysis Comparison: ${componentName}</h3>
+                
+                ${hasDifferences ? `
+                    <div class="difference-banner">
+                        ⚠️ Discrepancies detected between database and AI analysis
+                    </div>
+                ` : `
+                    <div class="match-banner">
+                        ✅ Database and AI analysis are in agreement
+                    </div>
+                `}
+
+                <div class="comparison-grid">
+                    <div class="source-column">
+                        <h4>Database Results</h4>
+                        <div class="asil-result asil-${dbASIL.toLowerCase()}">${dbASIL}</div>
+                        <div class="parameters">
+                            <div>Severity: S${dbData.S}</div>
+                            <div>Exposure: E${dbData.E}</div>
+                            <div>Controllability: C${dbData.C}</div>
+                        </div>
+                    </div>
+
+                    <div class="source-column">
+                        <h4>AI Analysis Results</h4>
+                        <div class="asil-result asil-${aiASIL.toLowerCase()}">${aiASIL}</div>
+                        <div class="parameters">
+                            <div class="${differences.severity ? 'different' : ''}">
+                                Severity: S${aiData.severity}
+                            </div>
+                            <div class="${differences.exposure ? 'different' : ''}">
+                                Exposure: E${aiData.exposure}
+                            </div>
+                            <div class="${differences.controllability ? 'different' : ''}">
+                                Controllability: C${aiData.controllability}
+                            </div>
+                        </div>
+                        <div class="confidence">Confidence: ${aiData.confidence}</div>
+                    </div>
+                </div>
+
+                ${hasDifferences ? this.generateDifferenceAnalysis(differences, aiData.reasoning) : ''}
+                
+                <div class="action-buttons">
+                    ${hasDifferences ? `
+                        <button class="adopt-ai-btn" onclick="asilCalc.adoptAIValues('${componentName}', ${JSON.stringify(aiData).replace(/"/g, '&quot;')})">
+                            Adopt AI Values
+                        </button>
+                    ` : ''}
+                    <button class="use-db-btn" onclick="asilCalc.loadComponent('${componentName}')">
+                        Use Database Values
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.style.display = 'block';
+    }
+
+    // Generate detailed difference analysis
+    generateDifferenceAnalysis(differences, aiReasoning) {
+        let analysis = '<div class="difference-analysis"><h4>Difference Analysis</h4>';
+        
+        Object.keys(differences).forEach(param => {
+            const diff = differences[param];
+            analysis += `
+                <div class="difference-item">
+                    <h5>${param.charAt(0).toUpperCase() + param.slice(1)}</h5>
+                    <div class="diff-values">
+                        Database: ${param.charAt(0).toUpperCase()}${diff.db} → AI: ${param.charAt(0).toUpperCase()}${diff.ai}
+                    </div>
+                    <div class="ai-reasoning">
+                        <strong>AI Reasoning:</strong> ${aiReasoning[param]}
+                    </div>
+                </div>
+            `;
+        });
+        
+        analysis += '</div>';
+        return analysis;
+    }
+
+    // Adopt AI values and optionally update database
+    adoptAIValues(componentName, aiData) {
+        this.currentParameters = {
+            S: aiData.severity,
+            E: aiData.exposure,
+            C: aiData.controllability
+        };
+
+        this.updateParameterInputs();
+        this.updateASILMatrix();
+        
+        const updatedComponent = {
+            S: aiData.severity,
+            E: aiData.exposure,
+            C: aiData.controllability,
+            asil: aiData.asil,
+            reasons: aiData.reasoning
+        };
+
+        this.showComponentAnalysis(componentName, updatedComponent);
+
+        if (this.autoLearn.enabled) {
+            this.updateDatabase(componentName, updatedComponent);
+        }
+
+        this.showSuccess('AI values adopted successfully');
+    }
+
+    // Update database with new values
+    updateDatabase(componentName, newData) {
+        if (typeof componentsDB === 'undefined') return;
+
+        if (this.autoLearn.requireConfirmation) {
+            if (!confirm(`Update database for "${componentName}" with AI-validated values?`)) {
+                return;
+            }
+        }
+
+        // In a real implementation, this would make an API call to update the backend
+        componentsDB[componentName] = newData;
+        this.showSuccess('Database updated with AI-validated values');
+    }
+
+    // Call AI API
+    async callAI(prompt) {
+        const endpoint = this.aiConfig.provider === 'openai' 
+            ? 'https://api.openai.com/v1/chat/completions'
+            : 'https://api.anthropic.com/v1/messages';
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.aiConfig.apiKey}`
+        };
+
+        const body = this.aiConfig.provider === 'openai' 
+            ? {
+                model: 'gpt-4-turbo-preview',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.3
+              }
+            : {
+                model: 'claude-3-opus-20240229',
+                max_tokens: 1000,
+                messages: [{ role: 'user', content: prompt }]
+              };
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            throw new Error(`AI API error: ${response.status}`);
+        }
+
+        return await response.json();
+    }
+
+    // Parse AI response
+    parseAIResponse(response) {
+        let content = '';
+        
+        if (this.aiConfig.provider === 'openai') {
+            content = response.choices[0].message.content;
+        } else {
+            content = response.content[0].text;
+        }
+
+        // Extract JSON from response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('Invalid AI response format');
+        }
+
+        return JSON.parse(jsonMatch[0]);
+    }
+
+    // Setup event listeners
+    setupEventListeners() {
+        // Component selection
+        const componentSelect = document.getElementById('component-select');
+        if (componentSelect) {
+            componentSelect.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    this.loadComponent(e.target.value);
+                }
+            });
+        }
+
+        // Parameter inputs
+        ['severity', 'exposure', 'controllability'].forEach(param => {
+            const input = document.getElementById(`${param}-input`);
+            if (input) {
+                input.addEventListener('change', (e) => {
+                    const value = parseInt(e.target.value);
+                    const paramKey = param === 'severity' ? 'S' : param === 'exposure' ? 'E' : 'C';
+                    this.currentParameters[paramKey] = value;
+                    this.updateASILMatrix();
+                });
+            }
+        });
+
+        // AI analysis button
+        const aiAnalyzeBtn = document.getElementById('ai-analyze-btn');
+        if (aiAnalyzeBtn) {
+            aiAnalyzeBtn.addEventListener('click', () => {
+                const customInput = document.getElementById('custom-component-input');
+                const componentName = customInput ? customInput.value.trim() : '';
+                
+                if (!componentName) {
+                    this.showError('Please enter a component name for AI analysis');
+                    return;
+                }
+                
+                this.analyzeWithAI(componentName);
+            });
+        }
+
+        // Settings modal
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeModal = document.getElementById('close-modal');
+
+        if (settingsBtn && settingsModal) {
+            settingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'block';
+            });
+        }
+
+        if (closeModal && settingsModal) {
+            closeModal.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+            });
+        }
+
+        // Save settings
+        const saveSettingsBtn = document.getElementById('save-settings');
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => {
+                this.saveSettings();
+            });
+        }
+    }
+
+    // Setup settings modal
+    setupSettingsModal() {
+        // Load current settings
+        const providerSelect = document.getElementById('ai-provider');
+        const apiKeyInput = document.getElementById('api-key');
+        const autoLearnCheckbox = document.getElementById('auto-learn');
+        const requireConfirmCheckbox = document.getElementById('require-confirmation');
+
+        if (providerSelect) providerSelect.value = this.aiConfig.provider || '';
+        if (apiKeyInput) apiKeyInput.value = this.aiConfig.apiKey || '';
+        if (autoLearnCheckbox) autoLearnCheckbox.checked = this.autoLearn.enabled;
+        if (requireConfirmCheckbox) requireConfirmCheckbox.checked = this.autoLearn.requireConfirmation;
+    }
+
+    // Save settings
+    saveSettings() {
+        const providerSelect = document.getElementById('ai-provider');
+        const apiKeyInput = document.getElementById('api-key');
+        const autoLearnCheckbox = document.getElementById('auto-learn');
+        const requireConfirmCheckbox = document.getElementById('require-confirmation');
+
+        this.aiConfig = {
+            provider: providerSelect ? providerSelect.value : null,
+            apiKey: apiKeyInput ? apiKeyInput.value : null
+        };
+
+        this.autoLearn = {
+            enabled: autoLearnCheckbox ? autoLearnCheckbox.checked : false,
+            requireConfirmation: requireConfirmCheckbox ? requireConfirmCheckbox.checked : true
+        };
+
+        localStorage.setItem('aiConfig', JSON.stringify(this.aiConfig));
+        localStorage.setItem('autoLearn', JSON.stringify(this.autoLearn));
+
+        const settingsModal = document.getElementById('settings-modal');
+        if (settingsModal) settingsModal.style.display = 'none';
+
+        this.showSuccess('Settings saved successfully');
+    }
+
+    // Load theme
+    loadTheme() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        document.body.classList.add(`theme-${theme}`);
+    }
+
+    // Utility functions
+    showSuccess(message) {
+        this.showNotification(message, 'success');
+    }
+
+    showError(message) {
+        this.showNotification(message, 'error');
+    }
+
+    showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    showLoading(message) {
+        const loader = document.getElementById('loading-indicator');
+        const loadingText = document.getElementById('loading-text');
+        
+        if (loader) loader.style.display = 'flex';
+        if (loadingText) loadingText.textContent = message;
+    }
+
+    hideLoading() {
+        const loader = document.getElementById('loading-indicator');
+        if (loader) loader.style.display = 'none';
+    }
+
+    showAIOnlyResults(componentName, aiAnalysis) {
+        const container = document.getElementById('comparison-results');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="ai-only-results">
+                <h3>AI Analysis: ${componentName}</h3>
+                <div class="ai-results-card">
+                    <div class="asil-result asil-${aiAnalysis.asil.toLowerCase()}">${aiAnalysis.asil}</div>
+                    <div class="parameters">
+                        <div>Severity: S${aiAnalysis.severity}</div>
+                        <div>Exposure: E${aiAnalysis.exposure}</div>
+                        <div>Controllability: C${aiAnalysis.controllability}</div>
+                    </div>
+                    <div class="confidence">Confidence: ${aiAnalysis.confidence}</div>
+                </div>
+
+                <div class="ai-reasoning">
+                    <h4>AI Reasoning</h4>
+                    <div class="reasoning-grid">
+                        <div class="reasoning-item">
+                            <h5>Severity</h5>
+                            <p>${aiAnalysis.reasoning.severity}</p>
+                        </div>
+                        <div class="reasoning-item">
+                            <h5>Exposure</h5>
+                            <p>${aiAnalysis.reasoning.exposure}</p>
+                        </div>
+                        <div class="reasoning-item">
+                            <h5>Controllability</h5>
+                            <p>${aiAnalysis.reasoning.controllability}</p>
+                        </div>
+                    </div>
+                </div>
+
+                ${aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 ? `
+                    <div class="ai-recommendations">
+                        <h4>Safety Recommendations</h4>
+                        <ul>
+                            ${aiAnalysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                <div class="action-buttons">
+                    <button class="adopt-ai-btn" onclick="asilCalc.adoptAIValues('${componentName}', ${JSON.stringify(aiAnalysis).replace(/"/g, '&quot;')})">
+                        Use These Values
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.style.display = 'block';
+    }
+
+    // Export functionality
+    exportResults() {
+        if (!this.currentComponent) {
+            this.showError('No component selected for export');
+            return;
+        }
+
+        const data = {
+            component: this.currentComponent,
+            parameters: this.currentParameters,
+            asil: this.getASILLevel(this.currentParameters.S, this.currentParameters.E, this.currentParameters.C),
+            timestamp: new Date().toISOString(),
+            analysis: this.getParameterDescriptions()
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.currentComponent}_asil_analysis.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.showSuccess('Analysis exported successfully');
+    }
+
+    // Search components
+    searchComponents(query) {
+        if (typeof componentsDB === 'undefined') return [];
+
+        const lowerQuery = query.toLowerCase();
+        return Object.keys(componentsDB).filter(component => 
+            component.toLowerCase().includes(lowerQuery) ||
+            component.replace(/_/g, ' ').toLowerCase().includes(lowerQuery)
+        );
+    }
+
+    // Get component statistics
+    getComponentStatistics() {
+        if (typeof componentsDB === 'undefined') return null;
+
+        const stats = {
+            total: Object.keys(componentsDB).length,
+            asilLevels: { QM: 0, A: 0, B: 0, C: 0, D: 0 },
+            severityDistribution: { 0: 0, 1: 0, 2: 0, 3: 0 },
+            exposureDistribution: { 1: 0, 2: 0, 3: 0, 4: 0 },
+            controllabilityDistribution: { 1: 0, 2: 0, 3: 0 }
+        };
+
+        Object.values(componentsDB).forEach(component => {
+            const asil = this.getASILLevel(component.S, component.E, component.C);
+            stats.asilLevels[asil]++;
+            stats.severityDistribution[component.S]++;
+            stats.exposureDistribution[component.E]++;
+            stats.controllabilityDistribution[component.C]++;
+        });
+
+        return stats;
+    }
+
+    // Generate comprehensive report
+    generateReport() {
+        if (!this.currentComponent) {
+            this.showError('No component selected for report generation');
+            return;
+        }
+
+        const component = typeof componentsDB !== 'undefined' ? componentsDB[this.currentComponent] : null;
+        const asil = this.getASILLevel(this.currentParameters.S, this.currentParameters.E, this.currentParameters.C);
+        const descriptions = this.getParameterDescriptions();
+
+        const report = `
+# ASIL Determination Report
+
+## Component Information
+- **Component Name:** ${this.currentComponent.replace(/_/g, ' ').toUpperCase()}
+- **Analysis Date:** ${new Date().toLocaleDateString()}
+- **ASIL Level:** ${asil}
+
+## Parameter Assessment
+
+### Severity (S${this.currentParameters.S})
+**${descriptions.severity[this.currentParameters.S].title}**
+
+${descriptions.severity[this.currentParameters.S].description}
+
+${component && component.reasons && component.reasons.S ? 
+    `**Component-specific reasoning:** ${component.reasons.S}` : ''}
+
+### Exposure (E${this.currentParameters.E})
+**${descriptions.exposure[this.currentParameters.E].title}**
+
+${descriptions.exposure[this.currentParameters.E].description}
+
+${component && component.reasons && component.reasons.E ? 
+    `**Component-specific reasoning:** ${component.reasons.E}` : ''}
+
+### Controllability (C${this.currentParameters.C})
+**${descriptions.controllability[this.currentParameters.C].title}**
+
+${descriptions.controllability[this.currentParameters.C].description}
+
+${component && component.reasons && component.reasons.C ? 
+    `**Component-specific reasoning:** ${component.reasons.C}` : ''}
+
+## ASIL Determination Matrix
+
+| S\\E | E1 | E2 | E3 | E4 |
+|-----|----|----|----|----|
+| S0  | QM | QM | QM | QM |
+| S1  | A  | A  | B  | B  |
+| S2  | B  | B  | C  | C  |
+| S3  | C  | C  | D  | D  |
+
+**Current Position:** S${this.currentParameters.S} × E${this.currentParameters.E} = **${asil}**
+
+## Recommendations
+
+Based on the analysis, the component requires **ASIL ${asil}** safety measures.
+
+${this.generateSafetyRecommendations(asil)}
+
+---
+*This report was generated using the AI-ASIL Calculator in compliance with ISO 26262 standards.*
+        `;
+
+        // Create and download the report
+        const blob = new Blob([report], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.currentComponent}_asil_report.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.showSuccess('Comprehensive report generated successfully');
+    }
+
+    // Generate safety recommendations based on ASIL level
+    generateSafetyRecommendations(asil) {
+        const recommendations = {
+            'QM': [
+                'Quality Management processes sufficient',
+                'Standard software development practices',
+                'Basic testing and verification'
+            ],
+            'A': [
+                'Implement basic fault detection mechanisms',
+                'Apply software architectural design principles',
+                'Conduct structured testing (unit, integration)',
+                'Use proven software components'
+            ],
+            'B': [
+                'Implement fault detection and handling',
+                'Apply semi-formal verification methods',
+                'Conduct comprehensive testing including fault injection',
+                'Use qualified tools for development',
+                'Implement redundancy where applicable'
+            ],
+            'C': [
+                'Implement advanced fault detection and fault handling',
+                'Apply formal verification methods',
+                'Conduct exhaustive testing including MC/DC coverage',
+                'Use certified tools and qualified personnel',
+                'Implement fault-tolerant architecture',
+                'Regular safety audits and assessments'
+            ],
+            'D': [
+                'Implement comprehensive fault detection, handling, and avoidance',
+                'Apply formal methods throughout development',
+                'Achieve highest test coverage (MC/DC + additional criteria)',
+                'Use certified tools with tool qualification',
+                'Implement fault-tolerant and fail-safe architecture',
+                'Redundancy and diversity in safety mechanisms',
+                'Continuous monitoring and diagnostics',
+                'Regular safety case updates and independent assessments'
+            ]
+        };
+
+        return recommendations[asil] ? 
+            recommendations[asil].map(rec => `- ${rec}`).join('\n') : 
+            'No specific recommendations available for this ASIL level.';
+    }
+}
+
+// Initialize the ASIL Calculator when DOM is loaded
+let asilCalc;
+
+document.addEventListener('DOMContentLoaded', () => {
+    asilCalc = new ASILCalculator();
     
-    generateOpenAIResponse(componentName) {
-      // OpenAI-style intelligent analysis with detailed reasoning
-      const analysis = {
-        severity: 'S2',
-        exposure: 'E3', 
-        controllability: 'C2',
-        function: `OpenAI Analysis: ${componentName} serves as a critical automotive component with specific safety implications requiring ISO 26262 evaluation.`,
-        failureModes: `Potential failure modes include: component malfunction, degraded performance, complete system failure, and unintended operation that could impact vehicle safety.`,
-        severityReason: `OpenAI GPT-4 Assessment: Based on automotive safety analysis, ${componentName} failure could result in moderate to severe injuries, warranting S2 classification per ISO 26262-3.`,
-        exposureReason: `OpenAI Analysis: Component exposure during typical vehicle operation is medium frequency, occurring in approximately 10-50% of driving scenarios, indicating E3 classification.`,
-        controllabilityReason: `OpenAI GPT-4: Driver controllability analysis suggests that >90% of drivers can take corrective action to prevent injury, indicating C2 normally controllable classification.`
-      };
-
-      // Enhanced component-specific analysis
-      if (componentName.includes('brake')) {
-        return {
-          ...analysis,
-          severity: 'S3', exposure: 'E4', controllability: 'C3',
-          severityReason: 'OpenAI Analysis: Brake system failure can result in fatal accidents - classified as S3 per ISO 26262 severity definitions.',
-          exposureReason: 'OpenAI Assessment: Braking is required continuously during vehicle operation - high exposure E4 classification.',
-          controllabilityReason: 'OpenAI GPT-4: Complete brake failure is difficult for most drivers to control safely - C3 classification.'
-        };
-      } else if (componentName.includes('steering')) {
-        return {
-          ...analysis,
-          severity: 'S3', exposure: 'E4', controllability: 'C2',
-          severityReason: 'OpenAI Analysis: Steering system failure can cause loss of vehicle control leading to fatal injuries - S3 classification.',
-          exposureReason: 'OpenAI Assessment: Steering system active continuously during vehicle operation - E4 high exposure.',
-          controllabilityReason: 'OpenAI GPT-4: Most skilled drivers can maintain some directional control even with power assist failure - C2.'
-        };
-      } else if (componentName.includes('airbag')) {
-        return {
-          ...analysis,
-          severity: 'S3', exposure: 'E2', controllability: 'C3',
-          severityReason: 'OpenAI Analysis: Airbag non-deployment during crash can result in fatal injuries - S3 severity classification.',
-          exposureReason: 'OpenAI Assessment: Crash events requiring airbag deployment are low probability - E2 classification.',
-          controllabilityReason: 'OpenAI GPT-4: Driver cannot control airbag deployment timing or effectiveness - C3 uncontrollable.'
-        };
-      } else if (componentName === 'body control module') {
-        return {
-          ...analysis,
-          severity: 'S1', exposure: 'E3', controllability: 'C2', // Different from database to create discrepancy
-          function: 'OpenAI Analysis: Body Control Module manages critical electrical systems including lighting, locking, and security functions essential for vehicle safety.',
-          severityReason: 'OpenAI GPT-4: BCM failure primarily affects convenience functions with moderate safety impact - S1 classification suggested.',
-          exposureReason: 'OpenAI Assessment: Body Control Module operates frequently but not continuously in safety-critical scenarios - E3 medium exposure.',
-          controllabilityReason: 'OpenAI Analysis: Driver can implement manual overrides for most BCM functions - C2 normally controllable.'
-        };
-      }
-
-      return analysis;
-    }
-  },
-
-  anthropic: {
-    name: 'Anthropic Claude',
-    model: 'claude-3-sonnet-20240229',
-    async analyzeComponent(componentName) {
-      // Simulated Anthropic API call with realistic delay
-      await new Promise(resolve => setTimeout(resolve, 1800 + Math.random() * 1200));
-      
-      return this.generateClaudeResponse(componentName);
-    },
-
-    generateClaudeResponse(componentName) {
-      // Claude-style methodical and conservative analysis
-      const analysis = {
-        severity: 'S1',
-        exposure: 'E2',
-        controllability: 'C1',
-        function: `Claude Analysis: ${componentName} represents an automotive subsystem requiring systematic hazard analysis and risk assessment according to ISO 26262 functional safety standard.`,
-        failureModes: `Systematic failure mode analysis identifies: hardware degradation, software malfunction, environmental stress failures, and systematic design inadequacies.`,
-        severityReason: `Claude Assessment: Conservative safety analysis indicates ${componentName} failures typically result in light to moderate injuries - S1 classification per ISO 26262-3 Table 1.`,
-        exposureReason: `Claude Analysis: Operational exposure assessment suggests low probability scenarios - E2 classification based on usage patterns.`,
-        controllabilityReason: `Claude Safety Assessment: Driver controllability analysis indicates >99% of drivers can prevent injury through corrective action - C1 simply controllable.`
-      };
-
-      // Claude's more conservative but thorough analysis
-      if (componentName.includes('brake')) {
-        return {
-          ...analysis,
-          severity: 'S3', exposure: 'E4', controllability: 'C3',
-          severityReason: 'Claude Safety Analysis: Primary braking system failure presents highest severity risk with potential for fatal outcomes - unambiguous S3 classification.',
-          exposureReason: 'Claude Assessment: Braking function required in virtually all driving scenarios - clear E4 high exposure classification.',
-          controllabilityReason: 'Claude Analysis: Loss of primary braking capability severely limits driver ability to prevent collision - C3 difficult to control.'
-        };
-      } else if (componentName.includes('steering')) {
-        return {
-          ...analysis,
-          severity: 'S2', exposure: 'E4', controllability: 'C2',
-          severityReason: 'Claude Analysis: Power steering failure can lead to severe injuries but fatality risk is moderate - S2 classification.',
-          exposureReason: 'Claude Assessment: Steering system continuously active during vehicle operation - E4 classification.',
-          controllabilityReason: 'Claude Safety Assessment: Experienced drivers can maintain control with manual steering effort - C2 normally controllable.'
-        };
-      } else if (componentName === 'body control module') {
-        return {
-          ...analysis,
-          severity: 'S1', exposure: 'E2', controllability: 'C1', // Different from database to create discrepancy
-          function: 'Claude Analysis: Body Control Module serves as central coordinator for body electrical systems with direct safety implications.',
-          severityReason: 'Claude Safety Analysis: BCM failure primarily impacts non-critical functions with low direct injury risk - S1 conservative assessment.',
-          exposureReason: 'Claude Assessment: Body Control Module safety-critical failures occur in limited operational scenarios - E2 exposure.',
-          controllabilityReason: 'Claude Analysis: Driver can easily compensate for most BCM failures through manual operation - C1 simply controllable.'
-        };
-      }
-
-      return analysis;
-    }
-  }
-};
-
-// Correct ASIL Matrix from ISO 26262-3 Table 4
-const asilMatrix = {
-  "S0": {
-    "E1": "QM", "E2": "QM", "E3": "QM", "E4": "QM"
-  },
-  "S1": {
-    "E1": {"C1": "QM", "C2": "QM", "C3": "QM"},
-    "E2": {"C1": "QM", "C2": "QM", "C3": "QM"},
-    "E3": {"C1": "QM", "C2": "QM", "C3": "A"},
-    "E4": {"C1": "QM", "C2": "A", "C3": "B"}
-  },
-  "S2": {
-    "E1": {"C1": "QM", "C2": "QM", "C3": "QM"},
-    "E2": {"C1": "QM", "C2": "QM", "C3": "A"},
-    "E3": {"C1": "QM", "C2": "A", "C3": "B"},
-    "E4": {"C1": "A", "C2": "B", "C3": "C"}
-  },
-  "S3": {
-    "E1": {"C1": "QM", "C2": "QM", "C3": "A"},
-    "E2": {"C1": "QM", "C2": "A", "C3": "B"},
-    "E3": {"C1": "A", "C2": "B", "C3": "C"},
-    "E4": {"C1": "B", "C2": "C", "C3": "D"}
-  }
-};
-
-// Enhanced Feature Database with CORRECTED Body Control Module Entry
-const featureDB = {
-  "brake system": {
-    "asil": "D", "severity": "S3", "exposure": "E4", "controllability": "C3",
-    "severityReason": "Loss of braking can be fatal.", 
-    "exposureReason": "Braking needed in most driving.", 
-    "controllabilityReason": "Driver cannot compensate for full brake loss.", 
-    "source": "Database", "validated": true,
-    "function": "Primary vehicle deceleration and stopping system providing controlled braking force",
-    "failureModes": "Complete loss of braking capability, reduced braking force, brake lock-up, uneven braking"
-  },
-  "electronic stability control": {
-    "asil": "C", "severity": "S3", "exposure": "E2", "controllability": "C3",
-    "severityReason": "Skid/rollover risk fatal.", 
-    "exposureReason": "ESC intervenes in limited scenarios.", 
-    "controllabilityReason": "Hard to control spin.", 
-    "source": "Database", "validated": true,
-    "function": "Electronic system that improves vehicle stability by detecting and reducing loss of traction",
-    "failureModes": "System failure to intervene during loss of control, false activation, sensor malfunctions"
-  },
-  "power steering": {
-    "asil": "C", "severity": "S3", "exposure": "E4", "controllability": "C2",
-    "severityReason": "Steering loss can cause crash.", 
-    "exposureReason": "Steering used constantly.", 
-    "controllabilityReason": "Manual steer possible with effort.", 
-    "source": "Database", "validated": true,
-    "function": "Assists driver in steering vehicle by reducing required steering effort through hydraulic or electric assistance",
-    "failureModes": "Complete loss of power assistance, intermittent assistance, incorrect assistance direction, excessive assistance"
-  },
-  "airbag": {
-    "asil": "D", "severity": "S3", "exposure": "E2", "controllability": "C3",
-    "severityReason": "Failure to deploy fatal.", 
-    "exposureReason": "Crashes less frequent.", 
-    "controllabilityReason": "Driver cannot control timing.", 
-    "source": "Database", "validated": true,
-    "function": "Provides supplemental occupant restraint and protection during crash events through rapid inflation",
-    "failureModes": "Failure to deploy when needed (non-deployment), inadvertent deployment during normal driving, incorrect deployment timing"
-  },
-  "body control module": {
-    "asil": "C", "severity": "S2", "exposure": "E4", "controllability": "C3",
-    "severityReason": "Electrical failure can disable critical lighting or locking systems leading to severe injuries.", 
-    "exposureReason": "Module active in all driving scenarios (high exposure).", 
-    "controllabilityReason": "Driver cannot unlock/turn lights manually in all scenarios.", 
-    "source": "Database", "validated": true, "corrected": true,
-    "function": "Central control unit for body electrical systems including lighting, door locks, and security systems",
-    "failureModes": "Central locking failure, window control issues, lighting control problems, communication errors, security system failure"
-  },
-  "adaptive cruise control": {
-    "asil": "C", "severity": "S2", "exposure": "E3", "controllability": "C2",
-    "severityReason": "Speed control failure severe.", 
-    "exposureReason": "Highway use common.", 
-    "controllabilityReason": "Driver can brake.", 
-    "source": "Database", "validated": true,
-    "function": "Automatically adjusts vehicle speed to maintain safe following distance",
-    "failureModes": "Failure to maintain speed, incorrect distance sensing, unintended acceleration/deceleration"
-  },
-  "headlights": {
-    "asil": "A", "severity": "S2", "exposure": "E3", "controllability": "C2",
-    "severityReason": "Night visibility severe.", 
-    "exposureReason": "Night scenarios medium.", 
-    "controllabilityReason": "Driver slows down.", 
-    "source": "Database", "validated": true,
-    "function": "Provides forward illumination for night and low-visibility driving conditions and communicates vehicle presence",
-    "failureModes": "Complete headlight failure, reduced brightness, incorrect beam pattern, bulb burnout, lens fogging"
-  },
-  "hvac": {
-    "asil": "QM", "severity": "S0", "exposure": "E1", "controllability": "C1",
-    "severityReason": "Comfort only.", 
-    "exposureReason": "Always on.", 
-    "controllabilityReason": "No safety impact.", 
-    "source": "Database", "validated": true,
-    "function": "Heating, ventilation, and air conditioning system for occupant comfort",
-    "failureModes": "Blower motor failure, temperature control issues, refrigerant leaks, duct blockages"
-  }
-};
-
-// ISO 26262 Parameter Definitions
-const parameterDefinitions = {
-  "severity": {
-    "S0": {
-      "name": "No Injuries",
-      "description": "No physical harm or injuries result from the hazardous event according to ISO 26262-3"
-    },
-    "S1": {
-      "name": "Light to Moderate Injuries", 
-      "description": "Light to moderate injuries that are typically recoverable per ISO 26262 severity classification"
-    },
-    "S2": {
-      "name": "Severe Injuries (Survival Probable)",
-      "description": "Severe to life-threatening injuries where survival is probable with medical treatment"
-    },
-    "S3": {
-      "name": "Life-threatening to Fatal Injuries",
-      "description": "Life-threatening injuries where survival is uncertain, or fatal injuries"
-    }
-  },
-  "exposure": {
-    "E1": {
-      "name": "Very Low Probability",
-      "description": "Very unlikely operational scenarios or driving conditions (<1% of operating time)"
-    },
-    "E2": {
-      "name": "Low Probability", 
-      "description": "Low probability operational scenarios (1-10% of operating time) per ISO 26262"
-    },
-    "E3": {
-      "name": "Medium Probability",
-      "description": "Medium probability operational scenarios (10-50% of operating time)"
-    },
-    "E4": {
-      "name": "High Probability",
-      "description": "High probability scenarios occurring frequently during normal operation (>50%)"
-    }
-  },
-  "controllability": {
-    "C1": {
-      "name": "Simply Controllable", 
-      "description": "Simply controllable - more than 99% of drivers can act to prevent injury"
-    },
-    "C2": {
-      "name": "Normally Controllable",
-      "description": "Normally controllable - more than 90% of drivers can act to prevent injury"
-    },
-    "C3": {
-      "name": "Difficult to Control or Uncontrollable",
-      "description": "Difficult to control - less than 90% of drivers can act to prevent injury"
-    }
-  }
-};
-
-// ASIL information with development requirements
-const asilInfo = {
-  'QM': {
-    description: 'Quality Management (QM) - No specific ISO 26262 safety requirements apply. Standard automotive quality processes sufficient.',
-    level: 'Quality Management',
-    requirements: 'Standard automotive quality management processes'
-  },
-  'A': {
-    description: 'ASIL A - Basic safety integrity level requiring systematic fault avoidance and basic fault detection during operation.',
-    level: 'Safety Integrity Level A',
-    requirements: 'Systematic fault avoidance, basic verification methods, single-point fault detection'
-  },
-  'B': {
-    description: 'ASIL B - Medium safety integrity level with moderate safety requirements including fault detection and some redundancy.',
-    level: 'Safety Integrity Level B', 
-    requirements: 'Enhanced verification, fault detection coverage, some redundancy measures'
-  },
-  'C': {
-    description: 'ASIL C - High safety integrity level requiring stringent safety requirements with extensive fault detection and redundancy.',
-    level: 'Safety Integrity Level C',
-    requirements: 'Rigorous verification, high fault detection coverage, redundancy, extensive testing'
-  },
-  'D': {
-    description: 'ASIL D - Highest safety integrity level with the most stringent safety requirements including fail-safe mechanisms.',
-    level: 'Safety Integrity Level D',
-    requirements: 'Maximum rigor verification, fail-safe design, extensive redundancy, comprehensive testing'
-  }
-};
-
-// Global state
-let currentParameters = {
-  severity: 'S1',
-  exposure: 'E1',
-  controllability: 'C1'
-};
-
-let currentDataSource = 'database';
-let originalDatabaseValues = null;
-let aiAnalysisResult = null;
-let currentComponent = '';
-let hasDiscrepancy = false;
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('ISO 26262 ASIL Analyzer v5 - AI Enhanced initialized');
-  
-  // Use longer delay to ensure DOM is fully ready
-  setTimeout(() => {
-    populateDatabaseDropdown();
-    initializeEventListeners();
-    initializeSettingsModal();
-    console.log('V5 initialization complete with AI providers');
-  }, 500); // Increased delay
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 's':
+                    e.preventDefault();
+                    asilCalc.exportResults();
+                    break;
+                case 'r':
+                    e.preventDefault();
+                    asilCalc.generateReport();
+                    break;
+                case ',':
+                    e.preventDefault();
+                    document.getElementById('settings-modal').style.display = 'block';
+                    break;
+            }
+        }
+    });
 });
 
-function populateDatabaseDropdown() {
-  console.log('Populating database dropdown...');
-  const dropdown = document.getElementById('database-select');
-  if (!dropdown) {
-    console.error('Database dropdown not found');
-    return;
-  }
-  
-  try {
-    // Force clear and rebuild dropdown
-    dropdown.innerHTML = '';
-    
-    // Add default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Choose from known automotive components...';
-    dropdown.appendChild(defaultOption);
-    
-    const sortedEntries = Object.keys(featureDB).sort();
-    console.log('Adding components to dropdown:', sortedEntries);
-    
-    sortedEntries.forEach(component => {
-      const option = document.createElement('option');
-      option.value = component;
-      const correctedFlag = featureDB[component].corrected ? ' [CORRECTED]' : '';
-      option.textContent = `${component.charAt(0).toUpperCase() + component.slice(1)} (ASIL ${featureDB[component].asil})${correctedFlag}`;
-      dropdown.appendChild(option);
-    });
-    
-    // Force refresh the dropdown
-    dropdown.style.display = 'none';
-    dropdown.offsetHeight; // Force reflow
-    dropdown.style.display = '';
-    
-    console.log('Database dropdown populated with', sortedEntries.length, 'components');
-    
-  } catch (error) {
-    console.error('Error populating dropdown:', error);
-  }
+// Additional utility functions
+function validateASILParameters(S, E, C) {
+    return S >= 0 && S <= 3 && E >= 1 && E <= 4 && C >= 1 && C <= 3;
 }
 
-function initializeEventListeners() {
-  console.log('Setting up v5 event listeners...');
-  
-  // Database dropdown with multiple event types for better compatibility
-  const databaseSelect = document.getElementById('database-select');
-  if (databaseSelect) {
-    // Remove any existing listeners first
-    databaseSelect.replaceWith(databaseSelect.cloneNode(true));
-    const newDropdown = document.getElementById('database-select');
-    
-    const handleDropdownChange = function(e) {
-      console.log('Dropdown changed:', e.target.value);
-      const selectedComponent = e.target.value;
-      if (selectedComponent) {
-        console.log('Database component selected:', selectedComponent);
-        const componentInput = document.getElementById('component-input');
-        if (componentInput) {
-          componentInput.value = selectedComponent;
-        }
-        analyzeComponent();
-      }
-    };
-    
-    // Add multiple event listeners for better compatibility
-    newDropdown.addEventListener('change', handleDropdownChange);
-    newDropdown.addEventListener('input', handleDropdownChange);
-    
-    // Also add click listener to ensure dropdown opens
-    newDropdown.addEventListener('click', function(e) {
-      console.log('Dropdown clicked');
-      e.stopPropagation();
-    });
-    
-    console.log('Database dropdown listeners attached');
-  } else {
-    console.error('Database dropdown not found');
-  }
-  
-  // Main analyze button
-  const analyzeBtn = document.getElementById('analyze-btn');
-  if (analyzeBtn) {
-    analyzeBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Analyze button clicked');
-      analyzeComponent();
-    });
-    console.log('Analyze button listener attached');
-  } else {
-    console.error('Analyze button not found');
-  }
-  
-  // Enter key support
-  const componentInput = document.getElementById('component-input');
-  if (componentInput) {
-    componentInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        console.log('Enter key pressed in component input');
-        analyzeComponent();
-      }
-    });
-    console.log('Component input listener attached');
-  } else {
-    console.error('Component input not found');
-  }
-  
-  // Adopt AI button
-  const adoptAiBtn = document.getElementById('adopt-ai-btn');
-  if (adoptAiBtn) {
-    adoptAiBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Adopt AI button clicked');
-      adoptAIValues();
-    });
-    console.log('Adopt AI button listener attached');
-  } else {
-    console.error('Adopt AI button not found');
-  }
+function formatComponentName(name) {
+    return name.replace(/_/g, ' ')
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
 }
 
-function initializeSettingsModal() {
-  console.log('Initializing settings modal...');
-  
-  const settingsBtn = document.getElementById('settings-btn');
-  const settingsModal = document.getElementById('settings-modal');
-  const closeModal = document.getElementById('close-modal');
-  const cancelSettings = document.getElementById('cancel-settings');
-  const saveSettings = document.getElementById('save-settings');
-  const modalBackdrop = settingsModal?.querySelector('.modal-backdrop');
-  
-  if (!settingsBtn || !settingsModal) {
-    console.error('Settings modal elements not found');
-    return;
-  }
-  
-  // Open settings modal with multiple event listeners
-  const openSettings = function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Settings button clicked');
-    settingsModal.classList.remove('hidden');
-    loadSettingsValues();
-  };
-  
-  settingsBtn.addEventListener('click', openSettings);
-  settingsBtn.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      openSettings(e);
-    }
-  });
-  
-  // Close modal events
-  const closeModalFn = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    console.log('Closing settings modal');
-    settingsModal.classList.add('hidden');
-  };
-  
-  if (closeModal) {
-    closeModal.addEventListener('click', closeModalFn);
-  }
-  if (cancelSettings) {
-    cancelSettings.addEventListener('click', closeModalFn);
-  }
-  if (modalBackdrop) {
-    modalBackdrop.addEventListener('click', closeModalFn);
-  }
-  
-  // Escape key to close modal
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !settingsModal.classList.contains('hidden')) {
-      closeModalFn(e);
-    }
-  });
-  
-  // Save settings
-  if (saveSettings) {
-    saveSettings.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Save settings clicked');
-      saveSettingsValues();
-    });
-  }
-  
-  // Provider selection
-  const providerRadios = document.querySelectorAll('input[name="ai-provider"]');
-  providerRadios.forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      console.log('Provider selected:', e.target.value);
-      aiSettings.provider = e.target.value; // Update immediately
-      updateAIProviderPill(e.target.value);
-    });
-  });
-  
-  // Update initial provider pill
-  updateAIProviderPill(aiSettings.provider);
-  
-  console.log('Settings modal initialized successfully');
-}
-
-function loadSettingsValues() {
-  console.log('Loading settings values...', aiSettings);
-  // Load current settings into modal
-  const providerRadio = document.querySelector(`input[name="ai-provider"][value="${aiSettings.provider}"]`);
-  if (providerRadio) {
-    providerRadio.checked = true;
-    console.log('Provider radio set to:', aiSettings.provider);
-  }
-  
-  const openaiKey = document.getElementById('openai-key');
-  const anthropicKey = document.getElementById('anthropic-key');
-  const autoLearn = document.getElementById('auto-learn');
-  
-  if (openaiKey) openaiKey.value = aiSettings.apiKeys.openai;
-  if (anthropicKey) anthropicKey.value = aiSettings.apiKeys.anthropic;
-  if (autoLearn) autoLearn.checked = aiSettings.autoLearn;
-}
-
-function saveSettingsValues() {
-  console.log('Saving settings values...');
-  // Save settings to session memory (never persisted)
-  const selectedProvider = document.querySelector('input[name="ai-provider"]:checked');
-  if (selectedProvider) {
-    aiSettings.provider = selectedProvider.value;
-    console.log('Provider saved:', aiSettings.provider);
-  }
-  
-  const openaiKey = document.getElementById('openai-key');
-  const anthropicKey = document.getElementById('anthropic-key');
-  const autoLearn = document.getElementById('auto-learn');
-  
-  if (openaiKey) aiSettings.apiKeys.openai = openaiKey.value;
-  if (anthropicKey) aiSettings.apiKeys.anthropic = anthropicKey.value;
-  if (autoLearn) aiSettings.autoLearn = autoLearn.checked;
-  
-  updateAIProviderPill(aiSettings.provider);
-  
-  // Close modal
-  document.getElementById('settings-modal').classList.add('hidden');
-  
-  console.log('Settings saved to session memory:', aiSettings);
-}
-
-function updateAIProviderPill(provider) {
-  const pill = document.getElementById('ai-provider-pill');
-  const providerName = document.getElementById('ai-provider-name');
-  
-  if (pill && providerName) {
-    const providerInfo = aiProviders[provider];
-    if (providerInfo) {
-      providerName.textContent = providerInfo.name;
-      console.log('Updated AI provider pill:', providerInfo.name);
-    }
-  }
-}
-
-function analyzeComponent() {
-  console.log('analyzeComponent function called');
-  const componentInput = document.getElementById('component-input');
-  if (!componentInput) {
-    console.error('Component input element not found');
-    return;
-  }
-  
-  const componentName = componentInput.value.trim().toLowerCase();
-  if (!componentName) {
-    alert('Please enter a component name to analyze.');
-    return;
-  }
-  
-  currentComponent = componentName;
-  console.log('Analyzing component with AI validation:', componentName);
-  
-  // Reset state
-  hasDiscrepancy = false;
-  aiAnalysisResult = null;
-  hideDiscrepancyBanner();
-  
-  // Show comparison section
-  const comparisonSection = document.getElementById('comparison-section');
-  if (comparisonSection) {
-    comparisonSection.style.display = 'block';
-  }
-  
-  // Show database result immediately
-  if (featureDB[componentName]) {
-    console.log('Component found in database:', componentName);
-    showDatabaseResult(componentName, featureDB[componentName]);
-    originalDatabaseValues = { ...featureDB[componentName] };
-  } else {
-    console.log('Component not found in database:', componentName);
-    showDatabaseResult(componentName, null);
-    originalDatabaseValues = null;
-  }
-  
-  // Start AI analysis in parallel
-  startAIAnalysis(componentName);
-}
-
-function showDatabaseResult(componentName, dbEntry) {
-  console.log('Showing database result for:', componentName, dbEntry);
-  const dbResult = document.getElementById('db-result');
-  const dbAsil = document.getElementById('db-asil');
-  const dbParams = document.getElementById('db-params');
-  
-  if (!dbAsil || !dbParams) {
-    console.error('Database result elements not found');
-    return;
-  }
-  
-  if (dbEntry) {
-    // Database entry found
-    dbAsil.textContent = dbEntry.asil;
-    dbAsil.className = 'asil-badge ' + dbEntry.asil.toLowerCase();
-    
-    dbParams.innerHTML = `
-      <span class="param">${dbEntry.severity}</span>
-      <span class="param">${dbEntry.exposure}</span>
-      <span class="param">${dbEntry.controllability}</span>
-    `;
-    
-    // Set current parameters
-    currentParameters = {
-      severity: dbEntry.severity,
-      exposure: dbEntry.exposure,
-      controllability: dbEntry.controllability
-    };
-    
-    currentDataSource = 'database';
-  } else {
-    // No database entry
-    dbAsil.textContent = 'N/A';
-    dbAsil.className = 'asil-badge';
-    dbParams.innerHTML = '<span class="param">Not in DB</span>';
-  }
-}
-
-async function startAIAnalysis(componentName) {
-  console.log('Starting AI analysis for:', componentName);
-  const aiContent = document.getElementById('ai-content');
-  const aiLoading = document.getElementById('ai-loading');
-  
-  if (!aiContent || !aiLoading) {
-    console.error('AI result elements not found');
-    return;
-  }
-  
-  // Show loading state
-  aiLoading.classList.remove('hidden');
-  aiContent.classList.add('hidden');
-  
-  try {
-    // Get selected AI provider
-    const provider = aiProviders[aiSettings.provider];
-    if (!provider) {
-      throw new Error('No AI provider selected');
-    }
-    
-    console.log(`Starting AI analysis with ${provider.name}...`);
-    
-    // Call AI provider
-    aiAnalysisResult = await provider.analyzeComponent(componentName);
-    console.log('AI analysis result:', aiAnalysisResult);
-    
-    // Show AI results
-    showAIResult(aiAnalysisResult);
-    
-    // Check for discrepancies
-    checkForDiscrepancies();
-    
-    // Show detailed analysis sections if we have database entry or AI result
-    const analysisData = originalDatabaseValues || aiAnalysisResult;
-    if (analysisData) {
-      displayDetailedAnalysis(componentName, analysisData);
-      showAllSections();
-      setupParameterListeners();
-      updateParameterDisplays();
-      updateASILDisplay();
-      
-      // Update data source pill based on what we're using
-      if (originalDatabaseValues && !hasDiscrepancy) {
-        updateDataSourcePill('database');
-      } else {
-        updateDataSourcePill('ai');
-      }
-    }
-    
-  } catch (error) {
-    console.error('AI analysis error:', error);
-    showAIError();
-  } finally {
-    aiLoading.classList.add('hidden');
-    aiContent.classList.remove('hidden');
-  }
-}
-
-function showAIResult(analysisResult) {
-  console.log('Showing AI result:', analysisResult);
-  const aiAsil = document.getElementById('ai-asil');
-  const aiParams = document.getElementById('ai-params');
-  
-  if (!aiAsil || !aiParams) {
-    console.error('AI result elements not found');
-    return;
-  }
-  
-  const calculatedAsil = calculateASIL(
-    analysisResult.severity,
-    analysisResult.exposure, 
-    analysisResult.controllability
-  );
-  
-  aiAsil.textContent = calculatedAsil;
-  aiAsil.className = 'asil-badge ' + calculatedAsil.toLowerCase();
-  
-  aiParams.innerHTML = `
-    <span class="param">${analysisResult.severity}</span>
-    <span class="param">${analysisResult.exposure}</span>
-    <span class="param">${analysisResult.controllability}</span>
-  `;
-}
-
-function showAIError() {
-  const aiAsil = document.getElementById('ai-asil');
-  const aiParams = document.getElementById('ai-params');
-  
-  if (aiAsil) {
-    aiAsil.textContent = 'ERROR';
-    aiAsil.className = 'asil-badge';
-  }
-  if (aiParams) {
-    aiParams.innerHTML = '<span class="param">AI Analysis Failed</span>';
-  }
-}
-
-function checkForDiscrepancies() {
-  console.log('Checking for discrepancies...');
-  if (!originalDatabaseValues || !aiAnalysisResult) {
-    console.log('No discrepancy check - missing data');
-    return;
-  }
-  
-  const dbAsil = calculateASIL(
-    originalDatabaseValues.severity,
-    originalDatabaseValues.exposure,
-    originalDatabaseValues.controllability
-  );
-  
-  const aiAsil = calculateASIL(
-    aiAnalysisResult.severity,
-    aiAnalysisResult.exposure,
-    aiAnalysisResult.controllability
-  );
-  
-  console.log('Discrepancy check - DB ASIL:', dbAsil, 'AI ASIL:', aiAsil);
-  console.log('DB params:', originalDatabaseValues.severity, originalDatabaseValues.exposure, originalDatabaseValues.controllability);
-  console.log('AI params:', aiAnalysisResult.severity, aiAnalysisResult.exposure, aiAnalysisResult.controllability);
-  
-  if (dbAsil !== aiAsil || 
-      originalDatabaseValues.severity !== aiAnalysisResult.severity ||
-      originalDatabaseValues.exposure !== aiAnalysisResult.exposure ||
-      originalDatabaseValues.controllability !== aiAnalysisResult.controllability) {
-    
-    hasDiscrepancy = true;
-    console.log('Discrepancy detected!');
-    showDiscrepancyBanner(dbAsil, aiAsil);
-  } else {
-    console.log('No discrepancy found');
-  }
-}
-
-function showDiscrepancyBanner(dbAsil, aiAsil) {
-  console.log('Showing discrepancy banner');
-  const banner = document.getElementById('discrepancy-banner');
-  const details = document.getElementById('discrepancy-details');
-  
-  if (banner && details) {
-    details.textContent = `Database shows ASIL ${dbAsil}, but ${aiProviders[aiSettings.provider].name} analysis suggests ASIL ${aiAsil}. Consider reviewing the assessment parameters.`;
-    banner.classList.remove('hidden');
-  }
-}
-
-function hideDiscrepancyBanner() {
-  const banner = document.getElementById('discrepancy-banner');
-  if (banner) {
-    banner.classList.add('hidden');
-  }
-}
-
-function adoptAIValues() {
-  if (!aiAnalysisResult) {
-    console.log('No AI values to adopt');
-    return;
-  }
-  
-  console.log('Adopting AI values:', aiAnalysisResult);
-  
-  // Update current parameters with AI values
-  currentParameters = {
-    severity: aiAnalysisResult.severity,
-    exposure: aiAnalysisResult.exposure,
-    controllability: aiAnalysisResult.controllability
-  };
-  
-  // Update database entry (in-memory only)
-  if (featureDB[currentComponent]) {
-    featureDB[currentComponent] = {
-      ...featureDB[currentComponent],
-      severity: aiAnalysisResult.severity,
-      exposure: aiAnalysisResult.exposure,
-      controllability: aiAnalysisResult.controllability,
-      asil: calculateASIL(aiAnalysisResult.severity, aiAnalysisResult.exposure, aiAnalysisResult.controllability),
-      severityReason: aiAnalysisResult.severityReason,
-      exposureReason: aiAnalysisResult.exposureReason,
-      controllabilityReason: aiAnalysisResult.controllabilityReason,
-      source: 'User-validated AI',
-      validated: true
-    };
-  } else {
-    // Create new database entry
-    featureDB[currentComponent] = {
-      severity: aiAnalysisResult.severity,
-      exposure: aiAnalysisResult.exposure,
-      controllability: aiAnalysisResult.controllability,
-      asil: calculateASIL(aiAnalysisResult.severity, aiAnalysisResult.exposure, aiAnalysisResult.controllability),
-      severityReason: aiAnalysisResult.severityReason,
-      exposureReason: aiAnalysisResult.exposureReason,
-      controllabilityReason: aiAnalysisResult.controllabilityReason,
-      function: aiAnalysisResult.function,
-      failureModes: aiAnalysisResult.failureModes,
-      source: 'User-validated AI',
-      validated: true
-    };
-  }
-  
-  // Update displays
-  showDatabaseResult(currentComponent, featureDB[currentComponent]);
-  updateParameterDisplays();
-  updateASILDisplay();
-  updateDataSourcePill('manual');
-  hideDiscrepancyBanner();
-  
-  // Auto-learn functionality
-  if (aiSettings.autoLearn) {
-    console.log('Auto-learn enabled - database updated automatically');
-  }
-  
-  alert('AI values adopted successfully! Database has been updated.');
-}
-
-function setupParameterListeners() {
-  console.log('Setting up parameter listeners...');
-  const severitySelect = document.getElementById('severity-select');
-  const exposureSelect = document.getElementById('exposure-select');
-  const controllabilitySelect = document.getElementById('controllability-select');
-  
-  if (severitySelect) {
-    severitySelect.removeEventListener('change', onParameterChange); // Remove existing
-    severitySelect.addEventListener('change', onParameterChange);
-  }
-  if (exposureSelect) {
-    exposureSelect.removeEventListener('change', onParameterChange);
-    exposureSelect.addEventListener('change', onParameterChange);
-  }
-  if (controllabilitySelect) {
-    controllabilitySelect.removeEventListener('change', onParameterChange);
-    controllabilitySelect.addEventListener('change', onParameterChange);
-  }
-}
-
-function displayDetailedAnalysis(componentName, analysisData) {
-  console.log('Displaying detailed analysis for:', componentName, analysisData);
-  
-  const analyzedComponentEl = document.getElementById('analyzed-component');
-  if (analyzedComponentEl) {
-    analyzedComponentEl.textContent = componentName.charAt(0).toUpperCase() + componentName.slice(1);
-  }
-  
-  const functionDescEl = document.getElementById('function-description');
-  if (functionDescEl) {
-    functionDescEl.innerHTML = `<strong>Function:</strong> ${analysisData.function}<br><strong>Potential Failure Modes:</strong> ${analysisData.failureModes}`;
-  }
-  
-  const severityReasoningEl = document.getElementById('severity-reasoning');
-  const exposureReasoningEl = document.getElementById('exposure-reasoning');
-  const controllabilityReasoningEl = document.getElementById('controllability-reasoning');
-  
-  if (severityReasoningEl) severityReasoningEl.textContent = analysisData.severityReason;
-  if (exposureReasoningEl) exposureReasoningEl.textContent = analysisData.exposureReason;
-  if (controllabilityReasoningEl) controllabilityReasoningEl.textContent = analysisData.controllabilityReason;
-}
-
-function showAllSections() {
-  console.log('Showing all sections...');
-  const sections = [
-    'analysis-section',
-    'parameters-section',
-    'asil-section',
-    'matrix-section',
-    'legend-section'
-  ];
-  
-  sections.forEach(sectionId => {
-    const section = document.getElementById(sectionId);
-    if (section) {
-      section.style.display = 'block';
-    }
-  });
-}
-
-function updateDataSourcePill(source) {
-  const pill = document.getElementById('data-source-pill');
-  const sourceText = document.getElementById('source-text');
-  
-  if (!pill || !sourceText) return;
-  
-  pill.classList.remove('database', 'ai', 'manual');
-  
-  switch (source) {
-    case 'database':
-      pill.classList.add('database');
-      sourceText.textContent = 'Database';
-      break;
-    case 'ai':
-      pill.classList.add('ai');
-      sourceText.textContent = aiProviders[aiSettings.provider].name;
-      break;
-    case 'manual':
-      pill.classList.add('manual');
-      sourceText.textContent = 'User Modified';
-      break;
-  }
-}
-
-function updateParameterDisplays() {
-  updateParameterBadge('severity', currentParameters.severity);
-  updateParameterBadge('exposure', currentParameters.exposure);
-  updateParameterBadge('controllability', currentParameters.controllability);
-  
-  const severityDesc = document.getElementById('severity-desc');
-  const exposureDesc = document.getElementById('exposure-desc');
-  const controllabilityDesc = document.getElementById('controllability-desc');
-  
-  if (severityDesc) severityDesc.textContent = parameterDefinitions.severity[currentParameters.severity].description;
-  if (exposureDesc) exposureDesc.textContent = parameterDefinitions.exposure[currentParameters.exposure].description;
-  if (controllabilityDesc) controllabilityDesc.textContent = parameterDefinitions.controllability[currentParameters.controllability].description;
-  
-  const severitySelect = document.getElementById('severity-select');
-  const exposureSelect = document.getElementById('exposure-select');
-  const controllabilitySelect = document.getElementById('controllability-select');
-  
-  if (severitySelect) severitySelect.value = currentParameters.severity;
-  if (exposureSelect) exposureSelect.value = currentParameters.exposure;
-  if (controllabilitySelect) controllabilitySelect.value = currentParameters.controllability;
-}
-
-function updateParameterBadge(paramType, value) {
-  const badge = document.getElementById(`current-${paramType}`);
-  if (!badge) return;
-  
-  const definitions = parameterDefinitions[paramType];
-  if (!definitions || !definitions[value]) return;
-  
-  badge.textContent = `${value} - ${definitions[value].name}`;
-  badge.className = 'param-badge';
-  
-  // Color coding
-  if (paramType === 'severity') {
-    const colors = {
-      'S3': { bg: 'rgba(255, 41, 101, 0.2)', color: '#ff2965' },
-      'S2': { bg: 'rgba(255, 107, 53, 0.2)', color: '#ff6b35' },
-      'S1': { bg: 'rgba(255, 235, 59, 0.2)', color: '#ffeb3b' },
-      'S0': { bg: 'rgba(0, 255, 136, 0.2)', color: '#00ff88' }
-    };
-    const colorSet = colors[value] || colors['S0'];
-    badge.style.background = colorSet.bg;
-    badge.style.color = colorSet.color;
-    badge.style.border = `1px solid ${colorSet.color}`;
-  } else if (paramType === 'exposure') {
-    badge.style.background = 'rgba(0, 212, 255, 0.2)';
-    badge.style.color = '#00d4ff';
-    badge.style.border = '1px solid #00d4ff';
-  } else {
-    badge.style.background = 'rgba(189, 0, 255, 0.2)';
-    badge.style.color = '#bd00ff';
-    badge.style.border = '1px solid #bd00ff';
-  }
-}
-
-function onParameterChange(event) {
-  console.log('Parameter changed:', event.target.id, event.target.value);
-  const paramType = event.target.id.replace('-select', '');
-  const newValue = event.target.value;
-  
-  if (currentDataSource === 'database' && originalDatabaseValues) {
-    currentDataSource = 'manual';
-    updateDataSourcePill('manual');
-  }
-  
-  if (paramType === 'severity') currentParameters.severity = newValue;
-  else if (paramType === 'exposure') currentParameters.exposure = newValue;
-  else if (paramType === 'controllability') currentParameters.controllability = newValue;
-  
-  const row = event.target.closest('tr');
-  if (row) {
-    row.classList.add('param-change');
-    setTimeout(() => row.classList.remove('param-change'), 500);
-  }
-  
-  updateParameterDisplays();
-  updateASILDisplay();
-}
-
-function calculateASIL(severity, exposure, controllability) {
-  if (severity === 'S0') {
-    return 'QM';
-  }
-  
-  const severityLevel = asilMatrix[severity];
-  if (!severityLevel) return 'QM';
-  
-  const exposureLevel = severityLevel[exposure];
-  if (!exposureLevel) return 'QM';
-  
-  if (typeof exposureLevel === 'string') {
-    return exposureLevel;
-  }
-  
-  const result = exposureLevel[controllability];
-  return result || 'QM';
-}
-
-function updateASILDisplay() {
-  const asil = calculateASIL(currentParameters.severity, currentParameters.exposure, currentParameters.controllability);
-  
-  const asilValueElement = document.getElementById('asil-value');
-  if (asilValueElement) {
-    asilValueElement.textContent = asil;
-    asilValueElement.className = 'asil-value ' + asil.toLowerCase();
-    
-    if (!asilValueElement.querySelector('.asil-pulse')) {
-      const pulse = document.createElement('div');
-      pulse.className = 'asil-pulse';
-      asilValueElement.appendChild(pulse);
-    }
-  }
-  
-  const asilInfoElement = document.getElementById('asil-info');
-  if (asilInfoElement && asilInfo[asil]) {
-    asilInfoElement.innerHTML = `
-      <p><strong>${asilInfo[asil].level}</strong></p>
-      <p>${asilInfo[asil].description}</p>
-      <p><strong>Development Requirements:</strong> ${asilInfo[asil].requirements}</p>
-    `;
-  }
-  
-  const matrixS = document.getElementById('matrix-s');
-  const matrixE = document.getElementById('matrix-e');
-  const matrixC = document.getElementById('matrix-c');
-  const matrixResult = document.getElementById('matrix-result');
-  
-  if (matrixS) matrixS.textContent = currentParameters.severity;
-  if (matrixE) matrixE.textContent = currentParameters.exposure;
-  if (matrixC) matrixC.textContent = currentParameters.controllability;
-  if (matrixResult) matrixResult.textContent = asil;
-}
-
-// Log BCM verification on load
-console.log('Body Control Module Database Entry Verification:');
-if (featureDB['body control module']) {
-  const bcm = featureDB['body control module'];
-  const calculatedAsil = calculateASIL(bcm.severity, bcm.exposure, bcm.controllability);
-  console.log('BCM - S:', bcm.severity, 'E:', bcm.exposure, 'C:', bcm.controllability);
-  console.log('BCM Calculated ASIL:', calculatedAsil, 'Database ASIL:', bcm.asil);
-  console.log('BCM Corrected:', bcm.corrected);
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { ASILCalculator, validateASILParameters, formatComponentName };
 }
