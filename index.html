@@ -1,1723 +1,683 @@
-// Components Database - 100+ Automotive Components
-const COMPONENTS_DB = {
-    // ADAS Components
-    'adaptive_cruise_control': {
-        name: 'Adaptive Cruise Control',
-        category: 'ADAS',
-        description: 'System that automatically adjusts vehicle speed to maintain a safe distance from vehicles ahead using radar and camera sensors.',
-        potential_hazards: ['Inappropriate acceleration', 'Failure to brake', 'Loss of target tracking'],
-        failure_modes: ['Sensor malfunction', 'Software error', 'Communication failure'],
-        safety_recommendations: ['Implement redundant sensors', 'Driver override capability', 'Fail-safe deceleration'],
-        S: 2, E: 4, C: 2, asil: 'B',
-        reasons: { S: 'Can cause collision (S2)', E: 'Used frequently on highways (E4)', C: 'Driver can override (C2)' }
-    },
-    'lane_keeping_assist': {
-        name: 'Lane Keeping Assist',
-        category: 'ADAS',
-        description: 'System that monitors lane markings and provides steering assistance to keep the vehicle centered in its lane.',
-        potential_hazards: ['Unintended steering input', 'Lane departure', 'Interference with driver control'],
-        failure_modes: ['Camera sensor failure', 'Algorithm error', 'Actuator malfunction'],
-        safety_recommendations: ['Driver hands-on detection', 'Gradual steering input', 'System disengagement protocol'],
-        S: 2, E: 4, C: 2, asil: 'B',
-        reasons: { S: 'Can cause lane departure accident (S2)', E: 'Active during highway driving (E4)', C: 'Driver can override steering (C2)' }
-    },
-    'automatic_emergency_braking': {
-        name: 'Automatic Emergency Braking',
-        category: 'ADAS',
-        description: 'System that detects imminent collision and automatically applies brakes when driver fails to respond.',
-        potential_hazards: ['False activation', 'Failure to activate', 'Insufficient braking force'],
-        failure_modes: ['Sensor obstruction', 'Processing delay', 'Brake system failure'],
-        safety_recommendations: ['Multiple sensor fusion', 'Graduated brake application', 'Driver notification system'],
-        S: 3, E: 3, C: 3, asil: 'D',
-        reasons: { S: 'Failure can result in fatal collision (S3)', E: 'Emergency situations occur regularly (E3)', C: 'Driver cannot react in time (C3)' }
-    },
-    'blind_spot_monitoring': {
-        name: 'Blind Spot Monitoring',
-        category: 'ADAS',
-        description: 'System that detects vehicles in blind spots and alerts driver during lane change attempts.',
-        potential_hazards: ['False warning', 'Missed detection', 'Delayed warning'],
-        failure_modes: ['Radar sensor failure', 'Signal processing error', 'Display malfunction'],
-        safety_recommendations: ['Dual sensor configuration', 'Visual and audible alerts', 'Self-diagnostic capability'],
-        S: 2, E: 4, C: 1, asil: 'B',
-        reasons: { S: 'Can cause side collision (S2)', E: 'Used during lane changes (E4)', C: 'Driver can check mirrors (C1)' }
-    },
-    'traffic_sign_recognition': {
-        name: 'Traffic Sign Recognition',
-        category: 'ADAS',
-        description: 'Camera-based system that identifies traffic signs and displays information to driver.',
-        potential_hazards: ['Misidentified signs', 'Missed critical signs', 'Incorrect speed limits'],
-        failure_modes: ['Camera malfunction', 'Image processing error', 'Database corruption'],
-        safety_recommendations: ['High-resolution cameras', 'Regular database updates', 'Driver confirmation protocol'],
-        S: 1, E: 4, C: 1, asil: 'A',
-        reasons: { S: 'Information only, low injury risk (S1)', E: 'Active during normal driving (E4)', C: 'Driver maintains control (C1)' }
-    },
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 26262 ASIL Analyser</title>
+    <link rel="stylesheet" href="./style.css">
+    <!-- Futuristic fonts & icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1 class="title">ISO 26262 ASIL Calculator</h1>
+                <p class="subtitle">Design And Implemeneted By Suduli</p>
+                <div class="header-actions">
+                    <button class="btn btn--outline settings-btn" id="settingsBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        Settings
+                    </button>
+                    <button class="btn btn--outline database-btn" id="databaseBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                        Database
+                    </button>
+                    <button class="btn btn--outline asil-guide-btn" id="asilGuideBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        ASIL Guide
+                    </button>
+                </div>
+            </div>
+        </header>
 
-    // Braking System Components
-    'abs_control_unit': {
-        name: 'ABS Control Unit',
-        category: 'Braking',
-        description: 'Electronic control unit that prevents wheel lockup during braking by modulating brake pressure.',
-        potential_hazards: ['Wheel lockup', 'Loss of steering control', 'Extended stopping distance'],
-        failure_modes: ['ECU malfunction', 'Sensor failure', 'Hydraulic pump failure'],
-        safety_recommendations: ['Redundant wheel speed sensors', 'Fail-safe to normal braking', 'System self-test capability'],
-        S: 3, E: 4, C: 2, asil: 'D',
-        reasons: { S: 'Brake failure can be fatal (S3)', E: 'Braking occurs frequently (E4)', C: 'Driver has limited control during emergency (C2)' }
-    },
-    'electronic_brake_distribution': {
-        name: 'Electronic Brake Distribution',
-        category: 'Braking',
-        description: 'System that optimally distributes brake force between front and rear wheels based on loading conditions.',
-        potential_hazards: ['Improper brake balance', 'Vehicle instability', 'Premature wheel lockup'],
-        failure_modes: ['Load sensor error', 'Control algorithm failure', 'Valve malfunction'],
-        safety_recommendations: ['Load sensing redundancy', 'Progressive brake distribution', 'Integration with ABS'],
-        S: 2, E: 4, C: 2, asil: 'C',
-        reasons: { S: 'Can cause loss of control (S2)', E: 'Active during all braking (E4)', C: 'Driver can modulate pedal (C2)' }
-    },
-    'brake_assist_system': {
-        name: 'Brake Assist System',
-        category: 'Braking',
-        description: 'System that detects emergency braking situations and provides maximum braking force.',
-        potential_hazards: ['Failure to detect emergency', 'False activation', 'Insufficient brake boost'],
-        failure_modes: ['Pedal sensor failure', 'Vacuum pump malfunction', 'Software error'],
-        safety_recommendations: ['Multiple detection algorithms', 'Manual override capability', 'System status monitoring'],
-        S: 3, E: 2, C: 2, asil: 'C',
-        reasons: { S: 'Emergency braking failure can be fatal (S3)', E: 'Emergency situations are uncommon (E2)', C: 'Driver can apply more force (C2)' }
-    },
-    'electronic_parking_brake': {
-        name: 'Electronic Parking Brake',
-        category: 'Braking',
-        description: 'Electric motor-driven parking brake system with automatic engagement and release capability.',
-        potential_hazards: ['Unintended engagement', 'Failure to engage', 'Failure to release'],
-        failure_modes: ['Motor failure', 'Switch malfunction', 'Software error'],
-        safety_recommendations: ['Manual release mechanism', 'Engagement confirmation', 'Speed-based lockout'],
-        S: 2, E: 4, C: 1, asil: 'B',
-        reasons: { S: 'Can cause vehicle movement or tire damage (S2)', E: 'Used every time parking (E4)', C: 'Alternative manual brake available (C1)' }
-    },
+    <!-- Futuristic Hero -->
+    <section class="hero-section fade-in-up">
+            <div class="hero-inner container">
+                <div class="hero-copy">
+                    <h1 class="hero-title">Next‑Gen ASIL Calculator</h1>
+                    <p class="hero-sub">Rapid, AI-assisted safety assessments with a futuristic interface — glass, glow and motion.</p>
+                    <div class="hero-ctas">
+                        <a class="btn btn--primary cta-neon" href="#componentInput">Analyze Now <i class="fas fa-rocket"></i></a>
+                        <a class="btn btn--outline cta-ghost" href="#asilGuideModal">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="glow-orbit"></div>
+                    <div class="glass-card small">Realtime AI Insights</div>
+                    <div class="glass-card medium">ISO 26262 Guidance</div>
+                    <div class="glass-card large">Interactive Analysis</div>
+                </div>
+            </div>
+        </section>
 
-    // Powertrain Components
-    'engine_control_unit': {
-        name: 'Engine Control Unit',
-        category: 'Powertrain',
-        description: 'Electronic control unit that manages engine operation including fuel injection, ignition timing, and emissions.',
-        potential_hazards: ['Unintended acceleration', 'Engine stall', 'Excessive emissions'],
-        failure_modes: ['ECU hardware failure', 'Software corruption', 'Sensor input error'],
-        safety_recommendations: ['Throttle redundancy', 'Limp-home mode', 'Real-time monitoring'],
-        S: 3, E: 4, C: 2, asil: 'D',
-        reasons: { S: 'Uncontrolled acceleration can be fatal (S3)', E: 'Engine operates continuously (E4)', C: 'Driver has brake and ignition control (C2)' }
-    },
-    'transmission_control_unit': {
-        name: 'Transmission Control Unit',
-        category: 'Powertrain',
-        description: 'Electronic system that controls automatic transmission shifting, torque converter lockup, and line pressure.',
-        potential_hazards: ['Unexpected gear change', 'Loss of drive', 'Transmission overheating'],
-        failure_modes: ['Solenoid failure', 'Software error', 'Hydraulic pressure loss'],
-        safety_recommendations: ['Shift pattern validation', 'Temperature monitoring', 'Manual override mode'],
-        S: 2, E: 4, C: 2, asil: 'C',
-        reasons: { S: 'Unexpected shifts can cause accidents (S2)', E: 'Transmission operates continuously (E4)', C: 'Driver can use manual mode (C2)' }
-    },
-    'hybrid_battery_management': {
-        name: 'Hybrid Battery Management System',
-        category: 'Powertrain',
-        description: 'System that monitors and controls high-voltage battery pack operation in hybrid and electric vehicles.',
-        potential_hazards: ['Battery thermal runaway', 'High voltage exposure', 'Sudden power loss'],
-        failure_modes: ['Cell monitoring failure', 'Cooling system malfunction', 'Contactor failure'],
-        safety_recommendations: ['Cell-level monitoring', 'Emergency disconnect', 'Thermal management'],
-        S: 3, E: 4, C: 3, asil: 'D',
-        reasons: { S: 'High voltage can be fatal (S3)', E: 'Battery operates continuously (E4)', C: 'No driver control over battery (C3)' }
-    },
+        <!-- Dashboard Stats -->
+        <section class="dashboard-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <h3>Total Components</h3>
+                        <div class="stat-value" id="totalComponents">16</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <h3>API Status</h3>
+                        <div class="stat-value" id="apiStatus">Not Configured</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <h3>Analyses Today</h3>
+                        <div class="stat-value" id="analysesCount">1</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    // Steering System Components
-    'electric_power_steering': {
-        name: 'Electric Power Steering',
-        category: 'Steering',
-        description: 'Electric motor-assisted steering system that provides variable steering assistance based on driving conditions.',
-        potential_hazards: ['Loss of power assistance', 'Unintended steering torque', 'Steering lockup'],
-        failure_modes: ['Motor failure', 'Torque sensor error', 'ECU malfunction'],
-        safety_recommendations: ['Manual steering fallback', 'Torque limiting', 'System status monitoring'],
-        S: 3, E: 4, C: 2, asil: 'D',
-        reasons: { S: 'Steering failure can be fatal (S3)', E: 'Steering used continuously (E4)', C: 'Driver can apply manual force (C2)' }
-    },
-    'active_front_steering': {
-        name: 'Active Front Steering',
-        category: 'Steering',
-        description: 'System that can modify steering ratio and add steering angle independent of driver input.',
-        potential_hazards: ['Unintended steering input', 'System oscillation', 'Loss of steering feel'],
-        failure_modes: ['Actuator malfunction', 'Position sensor error', 'Software instability'],
-        safety_recommendations: ['Driver override detection', 'Gradual intervention', 'System disengagement capability'],
-        S: 3, E: 3, C: 3, asil: 'D',
-        reasons: { S: 'Unwanted steering can cause fatal accident (S3)', E: 'Active during normal driving (E3)', C: 'Difficult for driver to overcome (C3)' }
-    },
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Component Input -->
+                <section class="input-section glass-panel fade-in-up">
+                    <h2>Component Analysis</h2>
+                    <div class="input-options">
+                        <div class="form-group">
+                            <label class="form-label">Input Method:</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="inputMethod" value="manual" checked="">
+                                    <span>Manual Description</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="inputMethod" value="database">
+                                    <span>From Database</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-    // Safety System Components
-    'airbag_control_unit': {
-        name: 'Airbag Control Unit',
-        category: 'Safety',
-        description: 'Electronic system that determines when to deploy airbags based on crash severity and occupant position.',
-        potential_hazards: ['Inadvertent deployment', 'Failure to deploy', 'Delayed deployment'],
-        failure_modes: ['Crash sensor failure', 'Squib circuit malfunction', 'Software error'],
-        safety_recommendations: ['Multiple crash sensors', 'Deployment threshold validation', 'System self-diagnosis'],
-        S: 3, E: 1, C: 3, asil: 'C',
-        reasons: { S: 'Improper deployment can be fatal (S3)', E: 'Crashes are rare (E1)', C: 'No driver control over deployment (C3)' }
-    },
-    'electronic_stability_control': {
-        name: 'Electronic Stability Control',
-        category: 'Safety',
-        description: 'System that helps maintain vehicle stability by detecting and reducing loss of traction through selective brake application.',
-        potential_hazards: ['Unwanted brake intervention', 'Failure to intervene', 'System oscillation'],
-        failure_modes: ['Yaw rate sensor failure', 'Brake actuator malfunction', 'Control algorithm error'],
-        safety_recommendations: ['Sensor redundancy', 'Gradual intervention', 'Driver override capability'],
-        S: 3, E: 3, C: 2, asil: 'D',
-        reasons: { S: 'Loss of control can be fatal (S3)', E: 'Operates in various driving conditions (E3)', C: 'Driver can counter-steer (C2)' }
-    }
-};
+                    <div class="manual-input" id="manualInput" style="display: block;">
+                        <div class="form-group">
+                            <label class="form-label" for="componentInput">
+                                Describe your automotive component or system:
+                            </label>
+                            <textarea class="form-control component-input" id="componentInput" placeholder="e.g., Electronic brake system controller that manages brake force distribution..." rows="4"></textarea>
+                        </div>
+                    </div>
 
-// ISO 26262 ASIL Calculator v16 - Real API Validation Fixed
-class ASILCalculator {
-    constructor() {
-        this.settings = {
-            provider: 'openai',
-            apiKey: '',
-            useOpenRouter: false,
-            openRouterModel: 'openai/gpt-oss-20b:free',
-            anthropicModel: 'claude-3-sonnet-20240229'
-        };
-        
-        this.isKeyValid = false;
-        this.analysesCount = 0;
-        this.componentsDB = COMPONENTS_DB;
-        this.filteredComponents = Object.keys(this.componentsDB);
-        this.currentEditKey = null;
-        
-        this.init();
-    }
+                    <div class="database-input hidden" id="databaseInput" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label" for="componentSelect">Select Component from Database:</label>
+                            <select class="form-control" id="componentSelect"><option value="">Choose a component...</option><option value="adaptive_cruise_control">Adaptive Cruise Control (ADAS)</option><option value="lane_keeping_assist">Lane Keeping Assist (ADAS)</option><option value="automatic_emergency_braking">Automatic Emergency Braking (ADAS)</option><option value="blind_spot_monitoring">Blind Spot Monitoring (ADAS)</option><option value="traffic_sign_recognition">Traffic Sign Recognition (ADAS)</option><option value="abs_control_unit">ABS Control Unit (Braking)</option><option value="electronic_brake_distribution">Electronic Brake Distribution (Braking)</option><option value="brake_assist_system">Brake Assist System (Braking)</option><option value="electronic_parking_brake">Electronic Parking Brake (Braking)</option><option value="engine_control_unit">Engine Control Unit (Powertrain)</option><option value="transmission_control_unit">Transmission Control Unit (Powertrain)</option><option value="hybrid_battery_management">Hybrid Battery Management System (Powertrain)</option><option value="electric_power_steering">Electric Power Steering (Steering)</option><option value="active_front_steering">Active Front Steering (Steering)</option><option value="airbag_control_unit">Airbag Control Unit (Safety)</option><option value="electronic_stability_control">Electronic Stability Control (Safety)</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Manual Adjustments:</label>
+                            <div class="sec-adjustments">
+                                <div class="adjustment-item">
+                                    <label>Severity (S):</label>
+                                    <select class="form-control adjustment-select" id="severitySelect">
+                                        <option value="">Auto</option>
+                                        <option value="0">S0</option>
+                                        <option value="1">S1</option>
+                                        <option value="2">S2</option>
+                                        <option value="3">S3</option>
+                                    </select>
+                                </div>
+                                <div class="adjustment-item">
+                                    <label>Exposure (E):</label>
+                                    <select class="form-control adjustment-select" id="exposureSelect">
+                                        <option value="">Auto</option>
+                                        <option value="0">E0</option>
+                                        <option value="1">E1</option>
+                                        <option value="2">E2</option>
+                                        <option value="3">E3</option>
+                                        <option value="4">E4</option>
+                                    </select>
+                                </div>
+                                <div class="adjustment-item">
+                                    <label>Controllability (C):</label>
+                                    <select class="form-control adjustment-select" id="controllabilitySelect">
+                                        <option value="">Auto</option>
+                                        <option value="0">C0</option>
+                                        <option value="1">C1</option>
+                                        <option value="2">C2</option>
+                                        <option value="3">C3</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    init() {
-        // Use immediate execution to avoid timing issues
-        this.initializeElements();
-        this.attachEventListeners();
-        this.loadSettings();
-        this.updateDashboard();
-        this.populateComponentSelect();
-        this.populateComponentsTable();
-        this.setupProviderUI();
-        console.log('ASIL Calculator v16 initialized successfully');
-    }
+                    <button class="btn btn--primary btn--lg analyze-btn" id="analyzeBtn">
+                        <span class="btn-text">Analyze ASIL</span>
+                        <div class="spinner hidden" id="spinner">
+                            <div class="spinner-circle"></div>
+                        </div>
+                    </button>
+                </section>
 
-    setupProviderUI() {
-        const providerSelect = document.getElementById('providerSelect');
-        const openRouterModelSelect = document.getElementById('openRouterModelSelect');
-        
-        if (providerSelect && openRouterModelSelect) {
-            // Initially hide/show OpenRouter model select based on current provider
-            openRouterModelSelect.parentElement.style.display = 
-                this.settings.provider === 'openrouter' ? 'block' : 'none';
+                <!-- Error Banner -->
+                <div class="error-banner hidden" id="errorBanner" style="display: none;">
+                    <div class="error-content">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span id="errorMessage">Error message here</span>
+                    </div>
+                </div>
 
-            // Add test event listener for provider changes
-            providerSelect.addEventListener('change', () => {
-                const isOpenRouter = providerSelect.value === 'openrouter';
-                openRouterModelSelect.parentElement.style.display = isOpenRouter ? 'block' : 'none';
-                
-                // For testing: Log provider change
-                console.log('Provider changed to:', providerSelect.value);
-                if (isOpenRouter) {
-                    console.log('OpenRouter model:', openRouterModelSelect.value);
-                }
-            });
-        }
-    }
+                <!-- Results Section -->
+                <section class="results-section fade-in-up" id="resultsSection" style="display: block;">
+                    <!-- Feature Details -->
+                    <div class="glass-panel feature-details">
+                        <h2>Feature Details</h2>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Component Name:</label>
+                                <span id="componentName">Engine Control Unit</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Category:</label>
+                                <span id="componentCategory">Powertrain</span>
+                            </div>
+                        </div>
+                    </div>
 
-    initializeElements() {
-        // Header buttons
-        this.settingsBtn = document.getElementById('settingsBtn');
-        this.databaseBtn = document.getElementById('databaseBtn');
-        this.asilGuideBtn = document.getElementById('asilGuideBtn');
-        this.providerSelect = document.getElementById('providerSelect');
-        this.openRouterModelSelect = document.getElementById('openRouterModelSelect');
-
-        // Modal elements
-        this.settingsModal = document.getElementById('settingsModal');
-        this.databaseModal = document.getElementById('databaseModal');
-        this.asilGuideModal = document.getElementById('asilGuideModal');
-        this.componentFormModal = document.getElementById('componentFormModal');
-
-        // Settings modal elements
-        this.closeSettingsModal = document.getElementById('closeSettingsModal');
-        this.providerSelect = document.getElementById('providerSelect');
-        this.apiKeyInput = document.getElementById('apiKeyInput');
-        this.testKeyBtn = document.getElementById('testKeyBtn');
-        this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
-        this.keyStatus = document.getElementById('keyStatus');
-
-        // Database modal elements
-        this.closeDatabaseModal = document.getElementById('closeDatabaseModal');
-        this.searchComponents = document.getElementById('searchComponents');
-        this.categoryFilter = document.getElementById('categoryFilter');
-        this.addComponentBtn = document.getElementById('addComponentBtn');
-        this.componentsTableBody = document.getElementById('componentsTableBody');
-
-        // Other modal closes
-        this.closeAsilGuideModal = document.getElementById('closeAsilGuideModal');
-        this.closeComponentFormModal = document.getElementById('closeComponentFormModal');
-
-        // Input elements
-        this.manualInput = document.getElementById('manualInput');
-        this.databaseInput = document.getElementById('databaseInput');
-        this.componentInput = document.getElementById('componentInput');
-        this.componentSelect = document.getElementById('componentSelect');
-
-        // S/E/C Adjustments
-        this.severitySelect = document.getElementById('severitySelect');
-        this.exposureSelect = document.getElementById('exposureSelect');
-        this.controllabilitySelect = document.getElementById('controllabilitySelect');
-
-        // Analysis elements
-        this.analyzeBtn = document.getElementById('analyzeBtn');
-        this.spinner = document.getElementById('spinner');
-        this.errorBanner = document.getElementById('errorBanner');
-        this.errorMessage = document.getElementById('errorMessage');
-        this.resultsSection = document.getElementById('resultsSection');
-
-        // Dashboard elements
-        this.totalComponents = document.getElementById('totalComponents');
-        this.apiStatus = document.getElementById('apiStatus');
-        this.analysesCountEl = document.getElementById('analysesCount');
-
-        // Result display elements
-        this.componentName = document.getElementById('componentName');
-        this.componentCategory = document.getElementById('componentCategory');
-    // The About panel uses a class-based paragraph; prefer that, fall back to id for backward compatibility
-    this.featureDescription = document.querySelector('.about-feature-description') || document.getElementById('featureDescription');
-        this.hazardsList = document.getElementById('hazardsList');
-        this.failureList = document.getElementById('failureList');
-        this.recommendationsList = document.getElementById('recommendationsList');
-
-        // Analysis results
-        this.severityValue = document.getElementById('severityValue');
-        this.severityDesc = document.getElementById('severityDesc');
-        this.exposureValue = document.getElementById('exposureValue');
-        this.exposureDesc = document.getElementById('exposureDesc');
-        this.controllabilityValue = document.getElementById('controllabilityValue');
-        this.controllabilityDesc = document.getElementById('controllabilityDesc');
-        this.asilBadge = document.getElementById('asilBadge');
-        this.asilExplanation = document.getElementById('asilExplanation');
-
-        // Comparison table elements
-        this.aiSeverity = document.getElementById('aiSeverity');
-        this.dbSeverity = document.getElementById('dbSeverity');
-        this.severityMatch = document.getElementById('severityMatch');
-        this.aiExposure = document.getElementById('aiExposure');
-        this.dbExposure = document.getElementById('dbExposure');
-        this.exposureMatch = document.getElementById('exposureMatch');
-        this.aiControllability = document.getElementById('aiControllability');
-        this.dbControllability = document.getElementById('dbControllability');
-        this.controllabilityMatch = document.getElementById('controllabilityMatch');
-        this.aiAsil = document.getElementById('aiAsil');
-        this.dbAsil = document.getElementById('dbAsil');
-        this.asilMatch = document.getElementById('asilMatch');
-
-        // Component form elements
-        this.componentForm = document.getElementById('componentForm');
-        this.componentFormTitle = document.getElementById('componentFormTitle');
-        this.cancelComponentForm = document.getElementById('cancelComponentForm');
-    }
-
-    attachEventListeners() {
-        // Provider and model selection handling
-        if (this.providerSelect && this.openRouterModelSelect) {
-            // Initially hide OpenRouter model select if OpenRouter is not selected
-            this.openRouterModelSelect.parentElement.style.display = 
-                this.providerSelect.value === 'openrouter' ? 'block' : 'none';
-
-            // Show/hide OpenRouter model select based on provider selection
-            this.providerSelect.addEventListener('change', () => {
-                this.openRouterModelSelect.parentElement.style.display = 
-                    this.providerSelect.value === 'openrouter' ? 'block' : 'none';
-            });
-        }
-
-        // Update About panel live from main textarea input with AI
-        if (this.componentInput && this.featureDescription) {
-            let descriptionTimer;
-            this.componentInput.addEventListener('input', async (e) => {
-                const value = e.target.value.trim();
-                clearTimeout(descriptionTimer);
-                
-                if (!value) {
-                    this.featureDescription.textContent = '';
-                    return;
-                }
-
-                // Show loading state
-                this.featureDescription.textContent = 'Waiting for analysis...';
-                this.featureDescription.classList.add('loading');
-                this.featureDescription.classList.remove('about-update-highlight');
-                
-                // Debounce for 1 second to avoid excessive API calls
-                descriptionTimer = setTimeout(async () => {
-                    try {
-                        const response = await this.generateAIDescription(value, 'short');
+                    <!-- About This Feature -->
+                    <div class="glass-panel about-feature fade-in-up">
+                        <h3>About This Feature</h3>
+                        <p id="featureDescription" class="about-feature-description"></p>
+                    </div>
+                    <div class="glass-panel">
+                        <h2>ASIL Analysis Results</h2>
                         
-                        if (response) {
-                            this.featureDescription.textContent = response.trim();
-                            // Visual feedback for update
-                            this.featureDescription.classList.add('about-update-highlight');
-                            setTimeout(() => {
-                                this.featureDescription.classList.remove('about-update-highlight');
-                            }, 2000);
-                        }
-                    } catch (error) {
-                        console.error('Error generating AI description:', error);
-                        if (error.message.includes('API key')) {
-                            this.featureDescription.textContent = 'Please configure your API key in Settings to enable AI-powered descriptions.';
-                        } else {
-                            // THIS IS WHERE THE ERROR MESSAGE IS SET
-                            this.featureDescription.textContent = 'Unable to generate description. Please check your network connection and try again.';
-                        }
-                    } finally {
-                        this.featureDescription.classList.remove('loading');
-                    }
-                }, 1000);
-            });
-        }
+                        <!-- Analysis Details -->
+                        <div class="analysis-grid">
+                            <div class="analysis-card">
+                                <h3>Severity (S)</h3>
+                                <div class="value-display" id="severityValue">S3</div>
+                                <p class="description" id="severityDesc">Uncontrolled acceleration can be fatal (S3)</p>
+                            </div>
+                            <div class="analysis-card">
+                                <h3>Exposure (E)</h3>
+                                <div class="value-display" id="exposureValue">E4</div>
+                                <p class="description" id="exposureDesc">Engine operates continuously (E4)</p>
+                            </div>
+                            <div class="analysis-card">
+                                <h3>Controllability (C)</h3>
+                                <div class="value-display" id="controllabilityValue">C2</div>
+                                <p class="description" id="controllabilityDesc">Driver has brake and ignition control (C2)</p>
+                            </div>
+                        </div>
 
-        // FIXED: Header button events with direct event handlers
-        if (this.settingsBtn) {
-            this.settingsBtn.onclick = (e) => {
-                e.preventDefault();
-                console.log('Settings button clicked');
-                this.openModal('settings');
-            };
-        }
+                        <!-- ASIL Result -->
+                        <div class="asil-result">
+                            <h3>Final ASIL Rating</h3>
+                            <div class="asil-badge asil-d" id="asilBadge">
+                                <span class="asil-level">ASIL D</span>
+                            </div>
+                            <p class="asil-explanation" id="asilExplanation">ASIL D - Highest integrity level. Most stringent safety requirements and processes. Extensive verification and validation needed.</p>
+                        </div>
+                    </div>
 
-        if (this.databaseBtn) {
-            this.databaseBtn.onclick = (e) => {
-                e.preventDefault();
-                console.log('Database button clicked');
-                this.openModal('database');
-            };
-        }
+                    <!-- 3-COLUMN LAYOUT: Hazards, Failure Modes, Safety Recommendations -->
+                    <div class="safety-analysis-grid">
+                        <div class="glass-panel hazards-section">
+                            <h3>Potential Hazards</h3>
+                            <ul class="hazards-list" id="hazardsList"><li>Unintended acceleration</li><li>Engine stall</li><li>Excessive emissions</li></ul>
+                        </div>
 
-        if (this.asilGuideBtn) {
-            this.asilGuideBtn.onclick = (e) => {
-                e.preventDefault();
-                console.log('ASIL Guide button clicked');
-                this.openModal('asilGuide');
-            };
-        }
+                        <div class="glass-panel failure-modes">
+                            <h3>Failure Modes</h3>
+                            <ul class="failure-list" id="failureList"><li>ECU hardware failure</li><li>Software corruption</li><li>Sensor input error</li></ul>
+                        </div>
 
-        // Modal close events - FIXED
-        this.attachModalCloseEvents();
+                        <div class="glass-panel safety-recommendations">
+                            <h3>ISO 26262 Safety Recommendations</h3>
+                            <ul class="recommendations-list" id="recommendationsList"><li>Throttle redundancy</li><li>Limp-home mode</li><li>Real-time monitoring</li></ul>
+                        </div>
+                    </div>
 
-        // Settings events
-        if (this.testKeyBtn) {
-            this.testKeyBtn.onclick = (e) => {
-                e.preventDefault();
-                this.testApiKey();
-            };
-        }
+                    <!-- AI vs Database Comparison -->
+                    <div class="glass-panel comparison-section">
+                        <h3>AI vs Database Comparison</h3>
+                        <div class="comparison-table-container">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>AI Analysis</th>
+                                        <th>Database</th>
+                                        <th>Match</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparisonTableBody">
+                                    <tr>
+                                        <td>Severity</td>
+                                        <td id="aiSeverity">S3</td>
+                                        <td id="dbSeverity">S3</td>
+                                        <td id="severityMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Exposure</td>
+                                        <td id="aiExposure">E4</td>
+                                        <td id="dbExposure">E4</td>
+                                        <td id="exposureMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Controllability</td>
+                                        <td id="aiControllability">C2</td>
+                                        <td id="dbControllability">C2</td>
+                                        <td id="controllabilityMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Final ASIL</td>
+                                        <td id="aiAsil">D</td>
+                                        <td id="dbAsil">D</td>
+                                        <td id="asilMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
 
-        if (this.saveSettingsBtn) {
-            this.saveSettingsBtn.onclick = (e) => {
-                e.preventDefault();
-                this.saveSettings();
-            };
-        }
+        <!-- Settings Modal -->
+        <div class="modal hidden" id="settingsModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2>API Settings</h2>
+                    <button class="modal-close" id="closeSettingsModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="providerSelect">AI Provider:</label>
+                        <select class="form-control" id="providerSelect">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="openrouter">OpenRouter</option>
+                        </select>
+                    </div>
 
-        if (this.providerSelect) {
-            this.providerSelect.addEventListener('change', () => {
-                this.updateProvider();
-            });
-        }
+                    <div class="form-group">
+                        <label class="form-label" for="openRouterModelSelect">OpenRouter Model:</label>
+                        <select class="form-control" id="openRouterModelSelect" style="display: none;">
+                            <option value="openai/gpt-oss-20b">GPT-OSS-20B</option>
+                        </select>
+                    </div>
 
-        if (this.apiKeyInput) {
-            this.apiKeyInput.addEventListener('input', () => {
-                this.isKeyValid = false;
-                this.updateSaveButtonState();
-                this.clearKeyStatus();
-            });
-        }
+                    <div class="form-group">
+                        <label class="form-label" for="apiKeyInput">API Key:</label>
+                        <input type="password" class="form-control" id="apiKeyInput" placeholder="Enter your API key">
+                        <div class="key-status" id="keyStatus"></div>
+                    </div>
 
-        // Database events
-        if (this.searchComponents) {
-            this.searchComponents.addEventListener('input', () => {
-                this.filterComponents();
-            });
-        }
+                    <div class="form-actions">
+                        <button class="btn btn--outline test-key-btn" id="testKeyBtn">
+                            Test API Key
+                        </button>
+                        <button class="btn btn--primary" id="saveSettingsBtn" disabled="">
+                            Save Settings
+                        </button>
+                    </div>
 
-        if (this.categoryFilter) {
-            this.categoryFilter.addEventListener('change', () => {
-                this.filterComponents();
-            });
-        }
+                    <!-- API Key Instructions -->
+                    <div class="api-instructions">
+                        <h4>How to obtain API keys:</h4>
+                        <div class="provider-instructions">
+                            <div class="instruction-item">
+                                <strong>OpenAI:</strong>
+                                <p>Visit <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> and create a new API key</p>
+                            </div>
+                            <div class="instruction-item">
+                                <strong>Anthropic:</strong>
+                                <p>Visit <a href="https://console.anthropic.com/keys" target="_blank">console.anthropic.com/keys</a> and generate a new key</p>
+                            </div>
+                            <div class="instruction-item">
+                                <strong>OpenRouter:</strong>
+                                <p>Visit <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> to create an API key</p>
+                            </div>
+                        </div>
+                        <p class="demo-note">
+                            <strong>Demo Mode:</strong> Use placeholder keys for testing: "demo-openai-key", "demo-anthropic-key", or "demo-openrouter-key"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        if (this.addComponentBtn) {
-            this.addComponentBtn.onclick = (e) => {
-                e.preventDefault();
-                this.openComponentForm();
-            };
-        }
+        <!-- Database Modal -->
+        <div class="modal hidden" id="databaseModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel database-modal-content">
+                <div class="modal-header">
+                    <h2>Components Database</h2>
+                    <button class="modal-close" id="closeDatabaseModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="database-controls">
+                        <div class="form-group">
+                            <input type="text" class="form-control search-input" id="searchComponents" placeholder="Search components...">
+                        </div>
+                        <div class="database-actions">
+                            <button class="btn btn--outline" id="addComponentBtn">Add New Component</button>
+                            <select class="form-control category-filter" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="ADAS">ADAS</option>
+                                <option value="Braking">Braking</option>
+                                <option value="Powertrain">Powertrain</option>
+                                <option value="Steering">Steering</option>
+                                <option value="Safety">Safety</option>
+                            </select>
+                        </div>
+                    </div>
 
-        // Component form events
-        if (this.componentForm) {
-            this.componentForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveComponent();
-            });
-        }
-
-        if (this.cancelComponentForm) {
-            this.cancelComponentForm.onclick = (e) => {
-                e.preventDefault();
-                this.closeModal('componentForm');
-            };
-        }
-
-        // Input method toggle - fixed
-        const radioButtons = document.querySelectorAll('input[name="inputMethod"]');
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                this.toggleInputMethod(e.target.value);
-            });
-        });
-
-        // Component selection
-        if (this.componentSelect) {
-            this.componentSelect.addEventListener('change', () => {
-                this.handleComponentSelection();
-            });
-        }
-
-        // Analysis button
-        if (this.analyzeBtn) {
-            this.analyzeBtn.onclick = (e) => {
-                e.preventDefault();
-                console.log('Analyze button clicked');
-                this.analyzeComponent();
-            };
-        }
-
-        // ESC key for modals
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeAllModals();
-            }
-        });
-
-        // Live update of About panel from component input with debouncing
-        let debounceTimer;
-        document.getElementById('componentInput').addEventListener('input', (e) => {
-            const description = e.target.value.trim();
-            clearTimeout(debounceTimer);
-            
-            // Clear description if input is empty
-            if (!description) {
-                if (this.featureDescription) {
-                    this.featureDescription.textContent = '';
-                }
-                return;
-            }
-
-            // Show loading state
-            if (this.featureDescription) {
-                this.featureDescription.textContent = 'Waiting for analysis...';
-                this.featureDescription.classList.add('loading');
-                this.featureDescription.classList.remove('about-update-highlight');
-            }
-        });
-        
-        console.log('All event listeners attached successfully');
-    }
-
-    attachModalCloseEvents() {
-        const modalCloseMappings = [
-            { btn: this.closeSettingsModal, modal: 'settings' },
-            { btn: this.closeDatabaseModal, modal: 'database' },
-            { btn: this.closeAsilGuideModal, modal: 'asilGuide' },
-            { btn: this.closeComponentFormModal, modal: 'componentForm' }
-        ];
-
-        modalCloseMappings.forEach(({ btn, modal }) => {
-            if (btn) {  // This check is redundant as the elements must exist
-                btn.onclick = (e) => {
-                    e.preventDefault();
-                    console.log(`Closing ${modal} modal`);
-                    this.closeModal(modal);
-                };
-            }
-        });
-
-        // Backdrop clicks
-        const modals = [
-            { element: this.settingsModal, name: 'settings' },
-            { element: this.databaseModal, name: 'database' },
-            { element: this.asilGuideModal, name: 'asilGuide' },
-            { element: this.componentFormModal, name: 'componentForm' }
-        ];
-
-        modals.forEach(({ element, name }) => {
-            if (element) {
-                element.onclick = (e) => {
-                    if (e.target === element || e.target.classList.contains('modal-backdrop')) {
-                        console.log(`Backdrop clicked for ${name} modal`);
-                        this.closeModal(name);
-                    }
-                };
-            }
-        });
-    }
-
-    openModal(modalType) {
-        console.log(`Opening modal: ${modalType}`);
-        this.closeAllModals(); // Close any open modals first
-        
-        const modalMap = {
-            'settings': this.settingsModal,
-            'database': this.databaseModal,
-            'asilGuide': this.asilGuideModal,
-            'componentForm': this.componentFormModal
-        };
-
-        const modal = modalMap[modalType];
-        if (modal) {
-            modal.classList.remove('hidden');
-            console.log(`Modal ${modalType} opened successfully`);
-        } else {
-            console.error(`Modal ${modalType} not found`);
-        }
-    }
-
-    closeModal(modalType) {
-        console.log(`Closing modal: ${modalType}`);
-        const modalMap = {
-            'settings': this.settingsModal,
-            'database': this.databaseModal,
-            'asilGuide': this.asilGuideModal,
-            'componentForm': this.componentFormModal
-        };
-
-        const modal = modalMap[modalType];
-        if (modal) {
-            modal.classList.add('hidden');
-            console.log(`Modal ${modalType} closed successfully`);
-        }
-    }
-
-    closeAllModals() {
-        const modals = [this.settingsModal, this.databaseModal, this.asilGuideModal, this.componentFormModal];
-        modals.forEach(modal => {
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        });
-    }
-
-    loadSettings() {
-        this.settings.provider = 'openai';
-        this.settings.apiKey = '';
-        if (this.providerSelect) this.providerSelect.value = this.settings.provider;
-        if (this.apiKeyInput) this.apiKeyInput.value = this.settings.apiKey;
-        this.updateSaveButtonState();
-        this.updateDashboard();
-    }
-
-    updateDashboard() {
-        if (this.totalComponents) {
-            this.totalComponents.textContent = Object.keys(this.componentsDB).length.toString();
-        }
-        
-        if (this.apiStatus) {
-            this.apiStatus.textContent = this.isKeyValid ? 'Connected' : 'Not Configured';
-        }
-        
-        if (this.analysesCountEl) {
-            this.analysesCountEl.textContent = this.analysesCount.toString();
-        }
-    }
-
-    updateProvider() {
-        const newProvider = this.providerSelect.value;
-        this.settings.provider = newProvider;
-        this.settings.useOpenRouter = newProvider === 'openrouter';
-        
-        // Update model if OpenRouter is selected
-        if (this.settings.useOpenRouter) {
-            const openRouterModelSelect = document.getElementById('openRouterModelSelect');
-            if (openRouterModelSelect) {
-                this.settings.openRouterModel = openRouterModelSelect.value;
-            }
-        }
-
-        this.isKeyValid = false;
-        this.updateSaveButtonState();
-        this.clearKeyStatus();
-        this.updateDashboard();
-        
-        // For testing: Log provider update
-        console.log('Provider updated:', {
-            provider: this.settings.provider,
-            useOpenRouter: this.settings.useOpenRouter,
-            model: this.settings.openRouterModel
-        });
-    }
-
-    clearKeyStatus() {
-        if (this.keyStatus) {
-            this.keyStatus.textContent = '';
-            this.keyStatus.className = 'key-status';
-        }
-    }
-
-    updateSaveButtonState() {
-        if (this.saveSettingsBtn) {
-            this.saveSettingsBtn.disabled = !this.isKeyValid;
-        }
-    }
-
-    async testApiKey() {
-        const apiKey = this.apiKeyInput ? this.apiKeyInput.value.trim() : '';
-        
-        if (!apiKey) {
-            this.showKeyStatus('Please enter an API key', 'error');
-            return;
-        }
-
-        // For testing: Log key validation attempt
-        console.log('Testing API key for provider:', this.settings.provider);
-        
-        this.showKeyStatus('Testing API key...', 'testing');
-        if (this.testKeyBtn) this.testKeyBtn.disabled = true;
-
-        try {
-            const isValid = await this.validateApiKey(apiKey, this.settings.provider);
-            this.isKeyValid = isValid;
-            
-            if (isValid) {
-                this.showKeyStatus('✓ API key is valid', 'success');
-            } else {
-                this.showKeyStatus('✗ API key is invalid or network error', 'error');
-            }
-        } catch (error) {
-            this.isKeyValid = false;
-            this.showKeyStatus(`✗ Error: ${error.message}`, 'error');
-        } finally {
-            if (this.testKeyBtn) this.testKeyBtn.disabled = false;
-            this.updateSaveButtonState();
-        }
-    }
-
-    async validateApiKey(apiKey, provider) {
-        // Handle demo keys
-        if (apiKey === 'demo-openai-key' || apiKey === 'demo-anthropic-key' || apiKey === 'demo-openrouter-key') {
-            return true;
-        }
-
-        try {
-            let url, headers;
-            
-            // Check if it's an OpenRouter key
-            if (apiKey.startsWith('sk-or-')) {
-                url = 'https://openrouter.ai/api/v1/auth/key';
-                headers = {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': window.location.href, // Required by OpenRouter
-                    'X-Title': 'ASIL Calculator' // Application name
-                };
-                this.settings.useOpenRouter = true;
-            } else if (provider === 'openai') {
-                url = 'https://api.openai.com/v1/models';
-                headers = {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                };
-                this.settings.useOpenRouter = false;
-            } else if (provider === 'anthropic') {
-                url = 'https://api.anthropic.com/v1/models';
-                headers = {
-                    'x-api-key': apiKey,
-                    'Content-Type': 'application/json',
-                    'anthropic-version': '2023-06-01'
-                };
-                this.settings.useOpenRouter = false;
-            } else {
-                throw new Error('Unsupported provider');
-            }
-
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: headers
-            });
-
-            // REAL API VALIDATION: Only return true if HTTP 200
-            if (response.status === 200) {
-                return true;
-            } else if (response.status === 401) {
-                throw new Error('Invalid API key - authentication failed');
-            } else if (response.status === 403) {
-                throw new Error('API key forbidden - insufficient permissions');
-            } else {
-                throw new Error(`API request failed with status ${response.status}`);
-            }
-        } catch (error) {
-            // If it's a network error, still throw it - no format fallback
-            if (error.message.includes('fetch')) {
-                throw new Error('Network error - unable to connect to API');
-            }
-            throw error;
-        }
-    }
-
-    showKeyStatus(message, type) {
-        if (this.keyStatus) {
-            this.keyStatus.textContent = message;
-            this.keyStatus.className = `key-status ${type}`;
-        }
-    }
-
-    saveSettings() {
-        if (!this.isKeyValid) {
-            this.showKeyStatus('Please test and validate your API key first', 'error');
-            return;
-        }
-
-        this.settings.provider = this.providerSelect ? this.providerSelect.value : 'openai';
-        this.settings.apiKey = this.apiKeyInput ? this.apiKeyInput.value.trim() : '';
-        
-        this.showKeyStatus('Settings saved successfully', 'success');
-        this.updateDashboard();
-        
-        setTimeout(() => {
-            this.closeModal('settings');
-        }, 1000);
-    }
-
-    populateComponentSelect() {
-        if (!this.componentSelect) {
-            console.error('Component select element not found');
-            return;
-        }
-        
-        this.componentSelect.innerHTML = '<option value="">Choose a component...</option>';
-        
-        Object.entries(this.componentsDB).forEach(([key, component]) => {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = `${component.name} (${component.category})`;
-            this.componentSelect.appendChild(option);
-        });
-        
-        console.log('Component select populated with', Object.keys(this.componentsDB).length, 'components');
-    }
-    async updateAboutFeature(componentKey) {
-        const aboutEl = document.querySelector('.about-feature-description');
-        if (!aboutEl) return componentKey;
-
-        if (!componentKey) {
-            aboutEl.textContent = '';
-            return componentKey;
-        }
-
-        const db = this.componentsDB || COMPONENTS_DB;
-        const component = db[componentKey];
-        
-        if (!component) {
-            aboutEl.textContent = '';
-            return componentKey;
-        }
-
-        aboutEl.textContent = 'Analyzing component features...';
-        aboutEl.classList.add('loading');
-        
-        try {
-            // Create a rich context for AI analysis
-            const componentContext = `
-Name: ${component.name}
-Category: ${component.category}
-Description: ${component.description}
-Hazards: ${component.potential_hazards.join(', ')}
-            `.trim();
-
-            // Use the new AI description generator
-            const response = await this.generateAIDescription(componentContext, 'short');
-            
-            if (response) {
-                aboutEl.textContent = response.trim();
-                aboutEl.classList.add('about-update-highlight');
-                setTimeout(() => aboutEl.classList.remove('about-update-highlight'), 2000);
-            }
-        } catch (error) {
-            console.error('Error generating AI description for component:', error);
-            if (error.message.includes('API key')) {
-                aboutEl.textContent = `Please configure your API key in Settings to enable AI-powered feature descriptions.`;
-            } else {
-                aboutEl.textContent = `${component.name} - Unable to generate AI description. Please check your connection and try again.`;
-            }
-        } finally {
-            aboutEl.classList.remove('loading');
-        }
-        
-        return componentKey;
-    }
-
-    populateComponentsTable() {
-        if (!this.componentsTableBody) {
-            console.error('Components table body not found');
-            return;
-        }
-        
-        this.componentsTableBody.innerHTML = '';
-        
-        this.filteredComponents.forEach(key => {
-            const component = this.componentsDB[key];
-            const row = document.createElement('tr');
-            
-            row.innerHTML = `
-                <td>${component.name}</td>
-                <td>${component.category}</td>
-                <td>ASIL ${component.asil}</td>
+                    <div class="components-table-container">
+                        <table class="components-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>ASIL</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="componentsTableBody"><tr>
+                <td>Adaptive Cruise Control</td>
+                <td>ADAS</td>
+                <td>ASIL B</td>
                 <td class="table-actions">
-                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="${key}">Edit</button>
-                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="${key}">Delete</button>
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="adaptive_cruise_control">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="adaptive_cruise_control">Delete</button>
                 </td>
-            `;
-            
-            this.componentsTableBody.appendChild(row);
-        });
-
-        // Add event listeners to edit and delete buttons
-        this.componentsTableBody.querySelectorAll('.edit-component-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                const key = e.target.dataset.key;
-                this.editComponent(key);
-            };
-        });
-
-        this.componentsTableBody.querySelectorAll('.delete-component-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                const key = e.target.dataset.key;
-                this.deleteComponent(key);
-            };
-        });
-    }
-
-    filterComponents() {
-        const searchTerm = this.searchComponents ? this.searchComponents.value.toLowerCase() : '';
-        const selectedCategory = this.categoryFilter ? this.categoryFilter.value : '';
-        
-        this.filteredComponents = Object.keys(this.componentsDB).filter(key => {
-            const component = this.componentsDB[key];
-            const matchesSearch = component.name.toLowerCase().includes(searchTerm) || 
-                                component.description.toLowerCase().includes(searchTerm);
-            const matchesCategory = !selectedCategory || component.category === selectedCategory;
-            
-            return matchesSearch && matchesCategory;
-        });
-        
-        this.populateComponentsTable();
-    }
-
-    openComponentForm(componentKey = null) {
-        this.currentEditKey = componentKey;
-        this.openModal('componentForm');
-        
-        if (componentKey && this.componentsDB[componentKey]) {
-            // Edit mode
-            const component = this.componentsDB[componentKey];
-            if (this.componentFormTitle) this.componentFormTitle.textContent = 'Edit Component';
-            
-            // Populate form fields
-            const nameInput = document.getElementById('componentNameInput');
-            const categoryInput = document.getElementById('componentCategoryInput');
-            const descInput = document.getElementById('componentDescriptionInput');
-            const severityInput = document.getElementById('componentSeverityInput');
-            const exposureInput = document.getElementById('componentExposureInput');
-            const controllabilityInput = document.getElementById('componentControllabilityInput');
-
-            if (nameInput) nameInput.value = component.name;
-            if (categoryInput) categoryInput.value = component.category;
-            if (descInput) descInput.value = component.description;
-            if (severityInput) severityInput.value = component.S.toString();
-            if (exposureInput) exposureInput.value = component.E.toString();
-            if (controllabilityInput) controllabilityInput.value = component.C.toString();
-        } else {
-            // Add mode
-            if (this.componentFormTitle) this.componentFormTitle.textContent = 'Add New Component';
-            if (this.componentForm) this.componentForm.reset();
-        }
-    }
-
-    saveComponent() {
-        const nameInput = document.getElementById('componentNameInput');
-        const categoryInput = document.getElementById('componentCategoryInput');
-        const descInput = document.getElementById('componentDescriptionInput');
-        const severityInput = document.getElementById('componentSeverityInput');
-        const exposureInput = document.getElementById('componentExposureInput');
-        const controllabilityInput = document.getElementById('componentControllabilityInput');
-
-        const name = nameInput ? nameInput.value.trim() : '';
-        const category = categoryInput ? categoryInput.value : '';
-        const description = descInput ? descInput.value.trim() : '';
-        const severity = severityInput ? parseInt(severityInput.value) : 0;
-        const exposure = exposureInput ? parseInt(exposureInput.value) : 0;
-        const controllability = controllabilityInput ? parseInt(controllabilityInput.value) : 0;
-
-        if (!name || !category || !description) {
-            alert('Please fill in all required fields');
-            return;
-        }
-        
-        const asil = this.calculateASIL(`S${severity}`, `E${exposure}`, `C${controllability}`);
-        const key = this.currentEditKey || name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-        
-        this.componentsDB[key] = {
-            name: name,
-            category: category,
-            description: description,
-            potential_hazards: ['Component failure', 'Unexpected behavior', 'System interference'],
-            failure_modes: ['Hardware failure', 'Software error', 'Environmental factors'],
-            safety_recommendations: ['Implement redundancy', 'Add monitoring', 'Follow ISO 26262 guidelines'],
-            S: severity,
-            E: exposure,
-            C: controllability,
-            asil: asil,
-            reasons: {
-                S: `Severity level ${severity} assigned`,
-                E: `Exposure level ${exposure} assigned`,
-                C: `Controllability level ${controllability} assigned`
-            }
-        };
-        
-        this.populateComponentSelect();
-        this.populateComponentsTable();
-        this.updateDashboard();
-        this.closeModal('componentForm');
-        this.currentEditKey = null;
-    }
-
-    editComponent(key) {
-        this.openComponentForm(key);
-    }
-
-    deleteComponent(key) {
-        if (confirm('Are you sure you want to delete this component?')) {
-            delete this.componentsDB[key];
-            this.populateComponentSelect();
-            this.populateComponentsTable();
-            this.updateDashboard();
-        }
-    }
-
-    toggleInputMethod(method) {
-        console.log('Toggling input method to:', method);
-        if (method === 'manual') {
-            if (this.manualInput) {
-                this.manualInput.classList.remove('hidden');
-                this.manualInput.style.display = 'block';
-            }
-            if (this.databaseInput) {
-                this.databaseInput.classList.add('hidden');
-                this.databaseInput.style.display = 'none';
-            }
-        } else {
-            if (this.manualInput) {
-                this.manualInput.classList.add('hidden');
-                this.manualInput.style.display = 'none';
-            }
-            if (this.databaseInput) {
-                this.databaseInput.classList.remove('hidden');
-                this.databaseInput.style.display = 'block';
-            }
-        }
-    }
-
-    handleComponentSelection() {
-        const selectedKey = this.componentSelect ? this.componentSelect.value : '';
-        if (!selectedKey) return;
-
-        // Update About panel content (shows DB info while AI generates a 2-3 line description on analysis)
-        this.updateAboutFeature(selectedKey);
-
-        const component = this.componentsDB[selectedKey];
-        console.log('Component selected:', component.name);
-
-        // Update component details immediately
-        if (this.componentName) this.componentName.textContent = component.name;
-        if (this.componentCategory) this.componentCategory.textContent = component.category;
-
-        // Do not overwrite the About panel here with raw DB description; AI will produce the short 2-3 line summary on analyze
-    }
-
-    async analyzeComponent() {
-        console.log('Starting component analysis...');
-        
-        const inputMethod = document.querySelector('input[name="inputMethod"]:checked');
-        const method = inputMethod ? inputMethod.value : 'manual';
-        let component, selectedComponent = null;
-        const selectedKey = this.componentSelect ? this.componentSelect.value : '';
-        
-        if (method === 'manual') {
-            component = this.componentInput ? this.componentInput.value.trim() : '';
-            if (!component) {
-                alert('Please describe a component to analyze.');
-                return;
-            }
-            
-            // Generate AI description for manual input immediately
-            try {
-                const descriptionPrompt = `As an automotive expert, provide a concise 3-line technical description focusing on:
-1. Primary purpose and role
-2. Integration with other systems 
-3. Safety implications
-
-Component: "${component}"
-
-Format: Return exactly 3 lines, one point per line.`;
-
-                const description = await this.callAI(descriptionPrompt);
-                if (this.featureDescription) {
-                    this.featureDescription.textContent = description;
-                    this.featureDescription.classList.add('about-update-highlight');
-                    setTimeout(() => {
-                        this.featureDescription.classList.remove('about-update-highlight');
-                    }, 2000);
-                }
-            } catch (error) {
-                console.error('Error generating description:', error);
-                if (this.featureDescription) {
-                    this.featureDescription.textContent = 'Unable to generate description. Please check API configuration and try again.';
-                }
-            }
-        } else {
-            // Use selected component from database; performASILAnalysis will request an AI summary
-            if (!selectedKey) {
-                alert('Please select a component from the database.');
-                return;
-            }
-            selectedComponent = this.componentsDB[selectedKey];
-            component = selectedComponent.name;
-        }
-
-        // For database components, we can analyze without API key
-        if (!selectedComponent && (!this.settings.apiKey || !this.isKeyValid)) {
-            alert('Please configure and validate your API key in Settings first for manual analysis.');
-            this.openModal('settings');
-            return;
-        }
-
-        this.setLoadingState(true);
-        this.hideError();
-        this.hideResults();
-
-        try {
-            // Step 1: Automotive validation (skip if from database)
-            if (method === 'manual') {
-                console.log('Checking if component is automotive...');
-                const isAutomotive = await this.checkIfAutomotive(component);
-                if (!isAutomotive) {
-                    this.showError('This component is not part of an automobile or vehicle subsystem. Please describe a component that is specifically part of automotive systems.');
-                    return;
-                }
-            }
-
-            // Step 2: Perform ASIL analysis
-            console.log('Performing ASIL analysis...');
-            const analysis = await this.performASILAnalysis(component, selectedComponent);
-            
-            // Step 3: Display comprehensive results
-            console.log('Displaying results...');
-            this.displayComprehensiveResults(analysis, selectedComponent);
-            
-            // Update analysis count
-            this.analysesCount++;
-            this.updateDashboard();
-
-        } catch (error) {
-            console.error('Analysis error:', error);
-            this.showError(`Analysis failed: ${error.message}`);
-        } finally {
-            this.setLoadingState(false);
-        }
-    }
-
-    async checkIfAutomotive(component) {
-        const prompt = `Is the following component/system part of an automobile or vehicle: "${component}"? 
-        
-        Respond with exactly "YES" if it is automotive/vehicle related, or "NO" if it is not.`;
-        
-        try {
-            const response = await this.callAI(prompt);
-            const result = response.trim().toUpperCase();
-            return result === 'YES' || result.startsWith('YES');
-        } catch (error) {
-            console.error('Classification error:', error);
-            return this.fallbackAutomotiveCheck(component);
-        }
-    }
-
-    fallbackAutomotiveCheck(component) {
-        const componentLower = component.toLowerCase();
-        const automotiveKeywords = [
-            'brake', 'braking', 'abs', 'engine', 'motor', 'steering', 'wheel',
-            'airbag', 'transmission', 'suspension', 'chassis', 'ecu', 'control',
-            'cruise', 'adaptive', 'lane', 'collision', 'safety', 'sensor',
-            'vehicle', 'automotive', 'car', 'truck', 'automobile'
-        ];
-        
-        return automotiveKeywords.some(keyword => componentLower.includes(keyword));
-    }
-
-    async performASILAnalysis(component, selectedComponent = null) {
-        // Check for manual adjustments
-        const manualS = this.severitySelect ? this.severitySelect.value : '';
-        const manualE = this.exposureSelect ? this.exposureSelect.value : '';
-        const manualC = this.controllabilitySelect ? this.controllabilitySelect.value : '';
-
-        // Always generate a short AI description (2-3 lines) for the About panel
-        try {
-            const targetName = selectedComponent ? selectedComponent.name : component;
-            const descriptionPrompt = `As an automotive expert, provide a 3-4 line technical description of this component: "${targetName}"`;
-            const aiDescription = await this.callAI(descriptionPrompt);
-            if (this.featureDescription) {
-                this.featureDescription.textContent = aiDescription;
-                // debug: add temporary highlight and console log to help verify updates
-                try {
-                    this.featureDescription.classList.add('about-update-highlight');
-                    console.log('AI description applied to About panel:', aiDescription);
-                    setTimeout(() => {
-                        this.featureDescription.classList.remove('about-update-highlight');
-                    }, 2000);
-                } catch (e) {
-                    // ignore DOM errors in older browsers
-                }
-            }
-        } catch (error) {
-            console.error('Error generating short AI description:', error);
-        }
-
-        let analysis;
-
-        if (selectedComponent) {
-            // Use database values with manual overrides
-            analysis = {
-                severity: {
-                    level: manualS ? `S${manualS}` : `S${selectedComponent.S}`,
-                    description: selectedComponent.reasons.S || this.getSeverityDescription(manualS ? `S${manualS}` : `S${selectedComponent.S}`)
-                },
-                exposure: {
-                    level: manualE ? `E${manualE}` : `E${selectedComponent.E}`,
-                    description: selectedComponent.reasons.E || this.getExposureDescription(manualE ? `E${manualE}` : `E${selectedComponent.E}`)
-                },
-                controllability: {
-                    level: manualC ? `C${manualC}` : `C${selectedComponent.C}`,
-                    description: selectedComponent.reasons.C || this.getControllabilityDescription(manualC ? `C${manualC}` : `C${selectedComponent.C}`)
-                },
-                hazards: selectedComponent.potential_hazards,
-                failures: selectedComponent.failure_modes,
-                recommendations: selectedComponent.safety_recommendations
-            };
-        } else {
-            // AI-based analysis for manual input
-            const prompt = `As an ISO 26262 functional safety expert, analyze this automotive component: "${component}"
-
-Provide detailed analysis in this exact format:
-SEVERITY: [S0-S3]
-SEVERITY_DESC: [detailed explanation]
-EXPOSURE: [E0-E4]
-EXPOSURE_DESC: [detailed explanation]  
-CONTROLLABILITY: [C0-C3]
-CONTROLLABILITY_DESC: [detailed explanation]
-HAZARDS: [list 3-5 potential hazards]
-FAILURES: [list 3-5 failure modes]
-RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
-
-            try {
-                const response = await this.callAI(prompt);
-                analysis = this.parseDetailedAnalysis(response);
-            } catch (error) {
-                console.error('AI analysis error:', error);
-                analysis = this.fallbackASILAnalysis(component);
-            }
-
-            // Apply manual overrides
-            if (manualS) {
-                analysis.severity.level = `S${manualS}`;
-                analysis.severity.description = this.getSeverityDescription(`S${manualS}`);
-            }
-            if (manualE) {
-                analysis.exposure.level = `E${manualE}`;
-                analysis.exposure.description = this.getExposureDescription(`E${manualE}`);
-            }
-            if (manualC) {
-                analysis.controllability.level = `C${manualC}`;
-                analysis.controllability.description = this.getControllabilityDescription(`C${manualC}`);
-            }
-        }
-
-        return analysis;
-    }
-
-    parseDetailedAnalysis(response) {
-        const lines = response.split('\n');
-        const analysis = {
-            severity: {},
-            exposure: {},
-            controllability: {},
-            hazards: [],
-            failures: [],
-            recommendations: []
-        };
-        
-        let currentSection = null;
-        
-        lines.forEach(line => {
-            const trimmed = line.trim();
-            
-            if (trimmed.startsWith('SEVERITY:')) {
-                analysis.severity.level = trimmed.split(':')[1].trim();
-            } else if (trimmed.startsWith('SEVERITY_DESC:')) {
-                analysis.severity.description = trimmed.split(':')[1].trim();
-            } else if (trimmed.startsWith('EXPOSURE:')) {
-                analysis.exposure.level = trimmed.split(':')[1].trim();
-            } else if (trimmed.startsWith('EXPOSURE_DESC:')) {
-                analysis.exposure.description = trimmed.split(':')[1].trim();
-            } else if (trimmed.startsWith('CONTROLLABILITY:')) {
-                analysis.controllability.level = trimmed.split(':')[1].trim();
-            } else if (trimmed.startsWith('CONTROLLABILITY_DESC:')) {
-                analysis.controllability.description = trimmed.split(':')[1].trim();
-            } else if (trimmed.startsWith('HAZARDS:')) {
-                currentSection = 'hazards';
-                const hazardText = trimmed.split(':')[1].trim();
-                if (hazardText) analysis.hazards.push(hazardText);
-            } else if (trimmed.startsWith('FAILURES:')) {
-                currentSection = 'failures';
-                const failureText = trimmed.split(':')[1].trim();
-                if (failureText) analysis.failures.push(failureText);
-            } else if (trimmed.startsWith('RECOMMENDATIONS:')) {
-                currentSection = 'recommendations';
-                const recText = trimmed.split(':')[1].trim();
-                if (recText) analysis.recommendations.push(recText);
-            } else if (trimmed && currentSection && trimmed.length > 3) {
-                analysis[currentSection].push(trimmed.replace(/^[-•*]\s*/, ''));
-            }
-        });
-        
-        // Ensure we have fallback data
-        if (!analysis.hazards.length) {
-            analysis.hazards = ['Component malfunction', 'Unexpected behavior', 'System interference'];
-        }
-        if (!analysis.failures.length) {
-            analysis.failures = ['Hardware failure', 'Software error', 'Communication loss'];
-        }
-        if (!analysis.recommendations.length) {
-            analysis.recommendations = ['Implement redundancy', 'Add monitoring', 'Follow ISO 26262 guidelines'];
-        }
-        
-        return analysis;
-    }
-
-    async callAI(prompt) {
-        // Validate API key and configuration
-        if (!this.settings.apiKey || this.settings.apiKey === '') {
-            throw new Error('Please configure your API key in Settings first.');
-        }
-        
-        if (!this.isKeyValid && !this.settings.apiKey.startsWith('demo-')) {
-            throw new Error('Please validate your API key in Settings first.');
-        }
-
-        try {
-            let url, headers, body;
-            
-            if (this.settings.useOpenRouter || this.settings.apiKey.startsWith('sk-or-')) {
-                url = 'https://openrouter.ai/api/v1/chat/completions';
-                headers = {
-                    'Authorization': `Bearer ${this.settings.apiKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': window.location.href || 'https://localhost',
-                    'X-Title': 'ASIL Calculator'
-                };
-                body = {
-                    model: "openai/gpt-oss-20b:free",
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: 1000,
-                    temperature: 0.1
-                };
-            } else if (this.settings.provider === 'openai') {
-                // Fixed OpenAI request format
-                url = 'https://api.openai.com/v1/chat/completions';
-                headers = {
-                    'Authorization': `Bearer ${this.settings.apiKey}`,
-                    'Content-Type': 'application/json'
-                };
-                body = {
-                    model: 'gpt-3.5-turbo', // Using the latest model
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: 1000,
-                    temperature: 0.1,
-                    stream: false
-                };
-            } else if (this.settings.provider === 'anthropic') {
-                url = 'https://api.anthropic.com/v1/messages';
-                headers = {
-                    'x-api-key': this.settings.apiKey,
-                    'Content-Type': 'application/json',
-                    'anthropic-version': '2024-01-01'
-                };
-                body = JSON.stringify({
-                    model: this.settings.anthropicModel,
-                    max_tokens: 1000,
-                    messages: [{ role: 'user', content: prompt }]
-                });
-            }
-
-            console.log('Making API call with:', { 
-                url, 
-                headers,
-                body: { ...body, apiKey: '***' } 
-            });
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body)
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API Error Response:', errorText);
-                try {
-                    const errorData = JSON.parse(errorText);
-                    throw new Error(`API request failed: ${errorData.error?.message || response.statusText}`);
-                } catch (e) {
-                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-                }
-            }
-
-            const data = await response.json();
-            console.log('API Response:', {
-                ...data,
-                apiKey: '***'
-            });
-
-            // Extract content based on provider
-            let content;
-            if (this.settings.useOpenRouter || this.settings.apiKey.startsWith('sk-or-')) {
-                content = data.choices[0].message.content;
-            } else if (this.settings.provider === 'openai') {
-                content = data.choices[0].message.content;
-            } else if (this.settings.provider === 'anthropic') {
-                content = data.content[0].text;
-            }
-
-            if (!content) {
-                throw new Error('No content in API response');
-            }
-
-            return content;
-            
-        } catch (error) {
-            console.error('API call error:', error);
-            throw error;
-        }
-    }
-
-    fallbackASILAnalysis(component) {
-        const componentLower = component.toLowerCase();
-        let severity, exposure, controllability;
-
-        // Enhanced rule-based analysis
-        if (componentLower.includes('brake') || componentLower.includes('braking') || componentLower.includes('abs')) {
-            severity = 'S3'; exposure = 'E4'; controllability = 'C2';
-        } else if (componentLower.includes('steering')) {
-            severity = 'S3'; exposure = 'E4'; controllability = 'C2';
-        } else if (componentLower.includes('airbag') || componentLower.includes('safety')) {
-            severity = 'S3'; exposure = 'E1'; controllability = 'C3';
-        } else if (componentLower.includes('engine') || componentLower.includes('powertrain') || componentLower.includes('transmission')) {
-            severity = 'S2'; exposure = 'E4'; controllability = 'C2';
-        } else if (componentLower.includes('cruise') || componentLower.includes('adas')) {
-            severity = 'S2'; exposure = 'E4'; controllability = 'C1';
-        } else {
-            severity = 'S2'; exposure = 'E3'; controllability = 'C2';
-        }
-
-        return {
-            severity: {
-                level: severity,
-                description: this.getSeverityDescription(severity)
-            },
-            exposure: {
-                level: exposure,
-                description: this.getExposureDescription(exposure)
-            },
-            controllability: {
-                level: controllability,
-                description: this.getControllabilityDescription(controllability)
-            },
-            hazards: ['Component failure', 'Unexpected behavior', 'System interference'],
-            failures: ['Hardware malfunction', 'Software error', 'Environmental factors'],
-            recommendations: ['Implement redundancy', 'Add monitoring systems', 'Follow ISO 26262 guidelines']
-        };
-    }
-
-    getSeverityDescription(level) {
-        const descriptions = {
-            'S0': 'No injuries - No harm to persons',
-            'S1': 'Light to moderate injuries - Minor harm to persons with full recovery expected',
-            'S2': 'Severe to life-threatening injuries - Significant harm with possible long-term effects',
-            'S3': 'Life-threatening to fatal injuries - Critical safety impact with potential fatalities'
-        };
-        return descriptions[level] || 'Severity assessment pending';
-    }
-
-    getExposureDescription(level) {
-        const descriptions = {
-            'E0': 'Very unlikely - Rare operational situations (< 0.001%)',
-            'E1': 'Unlikely - Infrequent operational situations (0.001% to 0.1%)',
-            'E2': 'Medium probability - Common operational situations (0.1% to 1%)',
-            'E3': 'High probability - Frequent operational situations (1% to 10%)',
-            'E4': 'Highly likely - Very frequent operational situations (> 10%)'
-        };
-        return descriptions[level] || 'Exposure assessment pending';
-    }
-
-    getControllabilityDescription(level) {
-        const descriptions = {
-            'C0': 'Controllable in general - Easy to control or avoid harm',
-            'C1': 'Simply controllable - Normal driver response is sufficient',
-            'C2': 'Normally controllable - Most drivers can control the situation',
-            'C3': 'Difficult to control or uncontrollable - High skill required or impossible to avoid'
-        };
-        return descriptions[level] || 'Controllability assessment pending';
-    }
-
-    calculateASIL(severity, exposure, controllability) {
-        const asilMatrix = {
-            'S0': {
-                'E0': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E1': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E2': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E3': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E4': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' }
-            },
-            'S1': {
-                'E0': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E1': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E2': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'A' },
-                'E3': { 'C0': 'QM', 'C1': 'QM', 'C2': 'A', 'C3': 'B' },
-                'E4': { 'C0': 'QM', 'C1': 'A', 'C2': 'B', 'C3': 'C' }
-            },
-            'S2': {
-                'E0': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'QM' },
-                'E1': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'A' },
-                'E2': { 'C0': 'QM', 'C1': 'QM', 'C2': 'A', 'C3': 'B' },
-                'E3': { 'C0': 'QM', 'C1': 'A', 'C2': 'B', 'C3': 'C' },
-                'E4': { 'C0': 'A', 'C1': 'B', 'C2': 'C', 'C3': 'D' }
-            },
-            'S3': {
-                'E0': { 'C0': 'QM', 'C1': 'QM', 'C2': 'QM', 'C3': 'A' },
-                'E1': { 'C0': 'QM', 'C1': 'QM', 'C2': 'A', 'C3': 'B' },
-                'E2': { 'C0': 'QM', 'C1': 'A', 'C2': 'B', 'C3': 'C' },
-                'E3': { 'C0': 'A', 'C1': 'B', 'C2': 'C', 'C3': 'D' },
-                'E4': { 'C0': 'B', 'C1': 'C', 'C2': 'D', 'C3': 'D' }
-            }
-        };
-
-        return asilMatrix[severity]?.[exposure]?.[controllability] || 'QM';
-    }
-
-    getASILExplanation(asil) {
-        const explanations = {
-            'QM': 'Quality Management - No specific safety requirements beyond quality management measures. Standard automotive development processes apply.',
-            'A': 'ASIL A - Lowest integrity level. Basic safety requirements and processes needed. Requires systematic approach to development.',
-            'B': 'ASIL B - Medium-low integrity level. Enhanced safety requirements and verification processes. Structured testing approaches required.',
-            'C': 'ASIL C - Medium-high integrity level. Comprehensive safety measures and validation processes. Detailed hazard analysis required.',
-            'D': 'ASIL D - Highest integrity level. Most stringent safety requirements and processes. Extensive verification and validation needed.'
-        };
-        return explanations[asil] || 'ASIL determination pending';
-    }
-
-    async displayComprehensiveResults(analysis, selectedComponent) {
-        // Feature Details
-        if (selectedComponent) {
-            if (this.componentName) this.componentName.textContent = selectedComponent.name;
-            if (this.componentCategory) this.componentCategory.textContent = selectedComponent.category;
-            // Feature description for database components is handled in handleComponentSelection
-        } else {
-            const componentText = this.componentInput ? this.componentInput.value.trim() : 'Manual Input';
-            if (this.componentName) this.componentName.textContent = componentText.substring(0, 50) + (componentText.length > 50 ? '...' : '');
-            if (this.componentCategory) this.componentCategory.textContent = 'Manual Analysis';
-            // Note: featureDescription for manual input is handled in performASILAnalysis
-        }
-
-        // S/E/C Analysis Results
-        if (this.severityValue) this.severityValue.textContent = analysis.severity.level;
-        if (this.severityDesc) this.severityDesc.textContent = analysis.severity.description;
-        
-        if (this.exposureValue) this.exposureValue.textContent = analysis.exposure.level;
-        if (this.exposureDesc) this.exposureDesc.textContent = analysis.exposure.description;
-        
-        if (this.controllabilityValue) this.controllabilityValue.textContent = analysis.controllability.level;
-        if (this.controllabilityDesc) this.controllabilityDesc.textContent = analysis.controllability.description;
-
-        // Calculate and display ASIL
-        const asil = this.calculateASIL(
-            analysis.severity.level,
-            analysis.exposure.level,
-            analysis.controllability.level
-        );
-
-        if (this.asilBadge) {
-            const asilLevel = this.asilBadge.querySelector('.asil-level');
-            if (asilLevel) asilLevel.textContent = asil === 'QM' ? 'QM' : `ASIL ${asil}`;
-            this.asilBadge.className = `asil-badge asil-${asil.toLowerCase()}`;
-        }
-        
-        if (this.asilExplanation) this.asilExplanation.textContent = this.getASILExplanation(asil);
-
-        // Display hazards, failures, and recommendations in 3-column layout
-        this.displayListSection(this.hazardsList, analysis.hazards || ['Analysis completed successfully']);
-        this.displayListSection(this.failureList, analysis.failures || ['Analysis completed successfully']);
-        this.displayListSection(this.recommendationsList, analysis.recommendations || ['Analysis completed successfully']);
-
-        // AI vs Database Comparison
-        this.displayComparison(analysis, selectedComponent, asil);
-
-        // Show results
-        if (this.resultsSection) {
-            this.resultsSection.classList.remove('hidden');
-            this.resultsSection.style.display = 'block';
-        }
-        
-        setTimeout(() => {
-            if (this.resultsSection) {
-                this.resultsSection.scrollIntoView({ behavior: 'smooth' });
-            }
-        }, 100);
-    }
-
-    displayListSection(listElement, items) {
-        if (!listElement || !items) return;
-        
-        listElement.innerHTML = '';
-        items.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            listElement.appendChild(li);
-        });
-    }
-
-    displayComparison(analysis, selectedComponent, aiAsil) {
-        if (!selectedComponent) {
-            // No database comparison for manual input
-            if (this.aiSeverity) this.aiSeverity.textContent = analysis.severity.level;
-            if (this.dbSeverity) this.dbSeverity.textContent = 'N/A';
-            if (this.severityMatch) this.severityMatch.textContent = 'N/A';
-            
-            if (this.aiExposure) this.aiExposure.textContent = analysis.exposure.level;
-            if (this.dbExposure) this.dbExposure.textContent = 'N/A';
-            if (this.exposureMatch) this.exposureMatch.textContent = 'N/A';
-            
-            if (this.aiControllability) this.aiControllability.textContent = analysis.controllability.level;
-            if (this.dbControllability) this.dbControllability.textContent = 'N/A';
-            if (this.controllabilityMatch) this.controllabilityMatch.textContent = 'N/A';
-            
-            if (this.aiAsil) this.aiAsil.textContent = aiAsil;
-            if (this.dbAsil) this.dbAsil.textContent = 'N/A';
-            if (this.asilMatch) this.asilMatch.textContent = 'N/A';
-            return;
-        }
-
-        // Database comparison
-        const dbSeverity = `S${selectedComponent.S}`;
-        const dbExposure = `E${selectedComponent.E}`;
-        const dbControllability = `C${selectedComponent.C}`;
-        const dbAsil = selectedComponent.asil;
-
-        if (this.aiSeverity) this.aiSeverity.textContent = analysis.severity.level;
-               if (this.dbSeverity) this.dbSeverity.textContent = dbSeverity;
-        if (this.severityMatch) {
-            const match = analysis.severity.level === dbSeverity;
-            this.severityMatch.textContent = match ? '✓ Match' : '✗ Differ';
-            this.severityMatch.className = match ? 'match-yes' : 'match-no';
-        }
-        
-        if (this.aiExposure) this.aiExposure.textContent = analysis.exposure.level;
-        if (this.dbExposure) this.dbExposure.textContent = dbExposure;
-        if (this.exposureMatch) {
-            const match = analysis.exposure.level === dbExposure;
-            this.exposureMatch.textContent = match ? '✓ Match' : '✗ Differ';
-            this.exposureMatch.className = match ? 'match-yes' : 'match-no';
-        }
-        
-        if (this.aiControllability) this.aiControllability.textContent = analysis.controllability.level;
-        if (this.dbControllability) this.dbControllability.textContent = dbControllability;
-        if (this.controllabilityMatch) {
-            const match = analysis.controllability.level === dbControllability;
-            this.controllabilityMatch.textContent = match ? '✓ Match' : '✗ Differ';
-            this.controllabilityMatch.className = match ? 'match-yes' : 'match-no';
-        }
-        
-        if (this.aiAsil) this.aiAsil.textContent = aiAsil;
-        if (this.dbAsil) this.dbAsil.textContent = dbAsil;
-        if (this.asilMatch) {
-            const match = aiAsil === dbAsil;
-            this.asilMatch.textContent = match ? '✓ Match' : '✗ Differ';
-            this.asilMatch.className = match ? 'match-yes' : 'match-no';
-        }
-    }
-
-    setLoadingState(isLoading) {
-        if (this.analyzeBtn) {
-            if (isLoading) {
-                this.analyzeBtn.classList.add('loading');
-                this.analyzeBtn.disabled = true;
-            } else {
-                this.analyzeBtn.classList.remove('loading');
-                this.analyzeBtn.disabled = false;
-            }
-        }
-        
-        if (this.spinner) {
-            if (isLoading) {
-                this.spinner.classList.remove('hidden');
-            } else {
-                this.spinner.classList.add('hidden');
-            }
-        }
-    }
-
-    showError(message) {
-        if (this.errorMessage) this.errorMessage.textContent = message;
-        if (this.errorBanner) {
-            this.errorBanner.classList.remove('hidden');
-            this.errorBanner.style.display = 'block';
-            setTimeout(() => {
-                this.errorBanner.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-        }
-    }
-
-    hideError() {
-        if (this.errorBanner) {
-            this.errorBanner.classList.add('hidden');
-            this.errorBanner.style.display = 'none';
-        }
-    }
-
-    hideResults() {
-        if (this.resultsSection) {
-            this.resultsSection.classList.add('hidden');
-            this.resultsSection.style.display = 'none';
-        }
-    }
-}
-
-// Initialize the application when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('Initializing ASIL Calculator v16...');
-        window.asilCalculator = new ASILCalculator();
-    });
-} else {
-    console.log('DOM ready - Initializing ASIL Calculator v16...');
-    window.asilCalculator = new ASILCalculator();
-}
+            </tr><tr>
+                <td>Lane Keeping Assist</td>
+                <td>ADAS</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="lane_keeping_assist">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="lane_keeping_assist">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Automatic Emergency Braking</td>
+                <td>ADAS</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="automatic_emergency_braking">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="automatic_emergency_braking">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Blind Spot Monitoring</td>
+                <td>ADAS</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="blind_spot_monitoring">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="blind_spot_monitoring">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Traffic Sign Recognition</td>
+                <td>ADAS</td>
+                <td>ASIL A</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="traffic_sign_recognition">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="traffic_sign_recognition">Delete</button>
+                </td>
+            </tr><tr>
+                <td>ABS Control Unit</td>
+                <td>Braking</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="abs_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="abs_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electronic Brake Distribution</td>
+                <td>Braking</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electronic_brake_distribution">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electronic_brake_distribution">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Brake Assist System</td>
+                <td>Braking</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="brake_assist_system">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="brake_assist_system">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electronic Parking Brake</td>
+                <td>Braking</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electronic_parking_brake">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electronic_parking_brake">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Engine Control Unit</td>
+                <td>Powertrain</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="engine_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="engine_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Transmission Control Unit</td>
+                <td>Powertrain</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="transmission_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="transmission_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Hybrid Battery Management System</td>
+                <td>Powertrain</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="hybrid_battery_management">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="hybrid_battery_management">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electric Power Steering</td>
+                <td>Steering</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electric_power_steering">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electric_power_steering">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Active Front Steering</td>
+                <td>Steering</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="active_front_steering">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="active_front_steering">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Airbag Control Unit</td>
+                <td>Safety</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="airbag_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="airbag_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electronic Stability Control</td>
+                <td>Safety</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electronic_stability_control">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electronic_stability_control">Delete</button>
+                </td>
+            </tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ASIL Guide Modal -->
+        <div class="modal hidden" id="asilGuideModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2>ASIL Reference Guide</h2>
+                    <button class="modal-close" id="closeAsilGuideModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="modal-body asil-guide-content">
+                    <div class="guide-section">
+                        <h3>Severity (S)</h3>
+                        <ul>
+                            <li><strong>S0:</strong> No injuries</li>
+                            <li><strong>S1:</strong> Light to moderate injuries</li>
+                            <li><strong>S2:</strong> Severe to life-threatening injuries</li>
+                            <li><strong>S3:</strong> Life-threatening to fatal injuries</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>Exposure (E)</h3>
+                        <ul>
+                            <li><strong>E0:</strong> Probability &lt; 0.001%</li>
+                            <li><strong>E1:</strong> Probability 0.001% to 0.1%</li>
+                            <li><strong>E2:</strong> Probability 0.1% to 1%</li>
+                            <li><strong>E3:</strong> Probability 1% to 10%</li>
+                            <li><strong>E4:</strong> Probability &gt; 10%</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>Controllability (C)</h3>
+                        <ul>
+                            <li><strong>C0:</strong> Controllable in general</li>
+                            <li><strong>C1:</strong> Simply controllable</li>
+                            <li><strong>C2:</strong> Normally controllable</li>
+                            <li><strong>C3:</strong> Difficult to control or uncontrollable</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>ASIL Levels</h3>
+                        <ul>
+                            <li><strong>QM:</strong> Quality Management - No safety requirements</li>
+                            <li><strong>ASIL A:</strong> Lowest integrity level</li>
+                            <li><strong>ASIL B:</strong> Medium-low integrity level</li>
+                            <li><strong>ASIL C:</strong> Medium-high integrity level</li>
+                            <li><strong>ASIL D:</strong> Highest integrity level</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Component Modal -->
+        <div class="modal hidden" id="componentFormModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2 id="componentFormTitle">Add New Component</h2>
+                    <button class="modal-close" id="closeComponentFormModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <form id="componentForm">
+                        <div class="form-group">
+                            <label class="form-label" for="componentNameInput">Component Name:</label>
+                            <input type="text" class="form-control" id="componentNameInput" required="">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="componentCategoryInput">Category:</label>
+                            <select class="form-control" id="componentCategoryInput" required="">
+                                <option value="">Select category...</option>
+                                <option value="ADAS">ADAS</option>
+                                <option value="Braking">Braking</option>
+                                <option value="Powertrain">Powertrain</option>
+                                <option value="Steering">Steering</option>
+                                <option value="Safety">Safety</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="componentDescriptionInput">Description:</label>
+                            <textarea class="form-control" id="componentDescriptionInput" rows="3" required=""></textarea>
+                        </div>
+                        <div class="sec-inputs">
+                            <div class="form-group">
+                                <label class="form-label" for="componentSeverityInput">Severity (S):</label>
+                                <select class="form-control" id="componentSeverityInput" required="">
+                                    <option value="0">S0</option>
+                                    <option value="1">S1</option>
+                                    <option value="2">S2</option>
+                                    <option value="3">S3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="componentExposureInput">Exposure (E):</label>
+                                <select class="form-control" id="componentExposureInput" required="">
+                                    <option value="0">E0</option>
+                                    <option value="1">E1</option>
+                                    <option value="2">E2</option>
+                                    <option value="3">E3</option>
+                                    <option value="4">E4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="componentControllabilityInput">Controllability (C):</label>
+                                <select class="form-control" id="componentControllabilityInput" required="">
+                                    <option value="0">C0</option>
+                                    <option value="1">C1</option>
+                                    <option value="2">C2</option>
+                                    <option value="3">C3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" id="cancelComponentForm">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Save Component</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./app.js"></script>
+
+</body></html>
