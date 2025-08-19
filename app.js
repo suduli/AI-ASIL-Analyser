@@ -2184,6 +2184,7 @@ if (document.readyState === 'loading') {
         setupReducedMotionSupport(); // Add reduced motion support
         window.asilCalculator = new ASILCalculator();
         setupTabSwitching(); // Add this line for the tab functionality
+        setupFooterLinks(); // Add footer functionality
     });
 } else {
     console.log('DOM ready - Initializing ASIL Calculator v16...');
@@ -2192,6 +2193,7 @@ if (document.readyState === 'loading') {
     setupReducedMotionSupport(); // Add reduced motion support
     window.asilCalculator = new ASILCalculator();
     setupTabSwitching(); // Add this line for the tab functionality
+    setupFooterLinks(); // Add footer functionality
 }
 
 // Tab switching functionality for the redesigned Component Analysis panel
@@ -2221,4 +2223,31 @@ function setupTabSwitching() {
             }
         });
     }
+}
+
+// Footer links functionality
+function setupFooterLinks() {
+    // Connect footer database link to database modal
+    const footerDatabaseLink = document.getElementById('footerDatabaseLink');
+    if (footerDatabaseLink) {
+        footerDatabaseLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (window.asilCalculator) {
+                window.asilCalculator.openDatabaseModal();
+            }
+        });
+    }
+
+    // Connect footer ASIL guide link to guide modal
+    const footerAsilGuideLink = document.getElementById('footerAsilGuideLink');
+    if (footerAsilGuideLink) {
+        footerAsilGuideLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (window.asilCalculator) {
+                window.asilCalculator.openAsilGuideModal();
+            }
+        });
+    }
+
+    console.log('Footer links initialized');
 }
