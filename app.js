@@ -244,6 +244,12 @@ class ASILCalculator {
         this.asilGuideBtn = document.getElementById('asilGuideBtn');
         this.providerSelect = document.getElementById('providerSelect');
         this.openRouterModelSelect = document.getElementById('openRouterModelSelect');
+        
+        // Tab elements for new design
+        this.manualTabInput = document.getElementById('manualTabInput');
+        this.databaseTabInput = document.getElementById('databaseTabInput');
+        this.manualInputPanel = document.getElementById('manualInputPanel');
+        this.databaseInputPanel = document.getElementById('databaseInputPanel');
 
         // Modal elements
         this.settingsModal = document.getElementById('settingsModal');
@@ -459,6 +465,23 @@ class ASILCalculator {
             });
         });
 
+        // Manual tab and database tab event listeners
+        if (this.manualTabInput) {
+            this.manualTabInput.addEventListener('change', () => {
+                if (this.manualTabInput.checked) {
+                    this.toggleInputMethod('manual');
+                }
+            });
+        }
+
+        if (this.databaseTabInput) {
+            this.databaseTabInput.addEventListener('change', () => {
+                if (this.databaseTabInput.checked) {
+                    this.toggleInputMethod('database');
+                }
+            });
+        }
+
         // Component selection
         if (this.componentSelect) {
             this.componentSelect.addEventListener('change', () => {
@@ -538,11 +561,52 @@ class ASILCalculator {
 
         const modal = modalMap[modalType];
         if (modal) {
+            // Store the element that had focus before opening the modal
+            this.lastFocusedElement = document.activeElement;
+            
             modal.classList.remove('hidden');
+            
+            // Find the first focusable element in the modal and focus it
+            setTimeout(() => {
+                const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusableElements.length > 0) {
+                    focusableElements[0].focus();
+                }
+                
+                // Set up trap focus within modal
+                this.setupFocusTrap(modal);
+            }, 50);
+            
             console.log(`Modal ${modalType} opened successfully`);
         } else {
             console.error(`Modal ${modalType} not found`);
         }
+    }
+
+    setupFocusTrap(modal) {
+        // Remove any existing event listeners
+        document.removeEventListener('keydown', this.handleTabKey);
+        
+        // Store focusable elements
+        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        // Create event listener function that can be removed later
+        this.handleTabKey = (e) => {
+            if (e.key === 'Tab') {
+                if (e.shiftKey && document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                } else if (!e.shiftKey && document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        };
+        
+        // Add the event listener
+        document.addEventListener('keydown', this.handleTabKey);
     }
 
     closeModal(modalType) {
@@ -557,6 +621,15 @@ class ASILCalculator {
         const modal = modalMap[modalType];
         if (modal) {
             modal.classList.add('hidden');
+            
+            // Remove focus trap
+            document.removeEventListener('keydown', this.handleTabKey);
+            
+            // Restore focus to the element that had focus before the modal was opened
+            if (this.lastFocusedElement) {
+                this.lastFocusedElement.focus();
+            }
+            
             console.log(`Modal ${modalType} closed successfully`);
         }
     }
@@ -568,6 +641,14 @@ class ASILCalculator {
                 modal.classList.add('hidden');
             }
         });
+        
+        // Remove focus trap
+        document.removeEventListener('keydown', this.handleTabKey);
+        
+        // Restore focus to the element that had focus before the modal was opened
+        if (this.lastFocusedElement) {
+            this.lastFocusedElement.focus();
+        }
     }
 
     loadSettings() {
@@ -967,23 +1048,39 @@ Hazards: ${component.potential_hazards.join(', ')}
 
     toggleInputMethod(method) {
         console.log('Toggling input method to:', method);
-        if (method === 'manual') {
-            if (this.manualInput) {
-                this.manualInput.classList.remove('hidden');
-                this.manualInput.style.display = 'block';
+        // For new component design
+        if (this.manualTabInput && this.databaseTabInput && this.manualInputPanel && this.databaseInputPanel) {
+            if (method === 'manual') {
+                this.manualTabInput.checked = true;
+                this.manualInputPanel.style.display = 'block';
+                this.databaseInputPanel.style.display = 'none';
+            } else {
+                this.databaseTabInput.checked = true;
+                this.manualInputPanel.style.display = 'none';
+                this.databaseInputPanel.style.display = 'block';
             }
-            if (this.databaseInput) {
-                this.databaseInput.classList.add('hidden');
-                this.databaseInput.style.display = 'none';
-            }
-        } else {
-            if (this.manualInput) {
-                this.manualInput.classList.add('hidden');
-                this.manualInput.style.display = 'none';
-            }
-            if (this.databaseInput) {
-                this.databaseInput.classList.remove('hidden');
-                this.databaseInput.style.display = 'block';
+        }
+        
+        // For backward compatibility with old design
+        if (this.manualInput && this.databaseInput) {
+            if (method === 'manual') {
+                if (this.manualInput) {
+                    this.manualInput.classList.remove('hidden');
+                    this.manualInput.style.display = 'block';
+                }
+                if (this.databaseInput) {
+                    this.databaseInput.classList.add('hidden');
+                    this.databaseInput.style.display = 'none';
+                }
+            } else {
+                if (this.manualInput) {
+                    this.manualInput.classList.add('hidden');
+                    this.manualInput.style.display = 'none';
+                }
+                if (this.databaseInput) {
+                    this.databaseInput.classList.remove('hidden');
+                    this.databaseInput.style.display = 'block';
+                }
             }
         }
     }
@@ -1007,6 +1104,14 @@ Hazards: ${component.potential_hazards.join(', ')}
 
     async analyzeComponent() {
         console.log('Starting component analysis...');
+        
+        // Prevent multiple analysis attempts
+        if (this.analyzeBtn && this.analyzeBtn.classList.contains('loading')) {
+            return;
+        }
+        
+        // Store the current focused element to restore focus later
+        const previouslyFocused = document.activeElement;
         
         const inputMethod = document.querySelector('input[name="inputMethod"]:checked');
         const method = inputMethod ? inputMethod.value : 'manual';
@@ -1088,6 +1193,11 @@ Format: Return exactly 3 lines, one point per line.`;
             // Update analysis count
             this.analysesCount++;
             this.updateDashboard();
+            
+            // Restore focus to the button when complete
+            if (previouslyFocused && previouslyFocused.focus) {
+                previouslyFocused.focus();
+            }
 
         } catch (error) {
             console.error('Analysis error:', error);
@@ -1817,17 +1927,27 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
             if (isLoading) {
                 this.analyzeBtn.classList.add('loading');
                 this.analyzeBtn.disabled = true;
+                this.analyzeBtn.setAttribute('aria-label', 'Analyzing, please wait.');
+                this.analyzeBtn.setAttribute('aria-busy', 'true');
             } else {
                 this.analyzeBtn.classList.remove('loading');
                 this.analyzeBtn.disabled = false;
+                this.analyzeBtn.setAttribute('aria-label', 'Analyze ASIL');
+                this.analyzeBtn.setAttribute('aria-busy', 'false');
+                
+                // Ensure any error state is removed
+                this.analyzeBtn.classList.remove('error');
             }
         }
         
         if (this.spinner) {
             if (isLoading) {
                 this.spinner.classList.remove('hidden');
+                this.spinner.setAttribute('role', 'status');
+                this.spinner.setAttribute('aria-live', 'polite');
             } else {
                 this.spinner.classList.add('hidden');
+                this.spinner.removeAttribute('aria-live');
             }
         }
     }
@@ -1840,6 +1960,18 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
             setTimeout(() => {
                 this.errorBanner.scrollIntoView({ behavior: 'smooth' });
             }, 100);
+        }
+        
+        // Add error animation to button if there was an analysis error
+        if (this.analyzeBtn) {
+            this.analyzeBtn.classList.add('error');
+            this.analyzeBtn.setAttribute('aria-label', 'Analysis failed. Try again.');
+            
+            // Remove error class after animation completes
+            setTimeout(() => {
+                this.analyzeBtn.classList.remove('error');
+                this.analyzeBtn.setAttribute('aria-label', 'Analyze ASIL');
+            }, 2000);
         }
     }
 
@@ -1858,13 +1990,159 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
     }
 }
 
+// Theme toggle functionality
+function setupThemeToggle() {
+    // Check for system preference first
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Check for saved preference
+    const savedTheme = localStorage.getItem('color-scheme');
+    
+    // Apply theme based on saved preference or system preference
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-color-scheme', savedTheme);
+    } else if (prefersDarkMode) {
+        document.documentElement.setAttribute('data-color-scheme', 'dark');
+    } else {
+        document.documentElement.setAttribute('data-color-scheme', 'light');
+    }
+    
+    // Create theme toggle button if it doesn't exist
+    let themeToggleBtn = document.getElementById('themeToggleBtn');
+    
+    if (!themeToggleBtn) {
+        themeToggleBtn = document.createElement('button');
+        themeToggleBtn.id = 'themeToggleBtn';
+        themeToggleBtn.className = 'btn btn--outline theme-toggle';
+        themeToggleBtn.setAttribute('aria-label', 'Toggle dark/light mode');
+        
+        // Create icon element
+        const iconElement = document.createElement('span');
+        iconElement.className = 'theme-toggle-icon';
+        iconElement.innerHTML = '☀️';
+        themeToggleBtn.appendChild(iconElement);
+        
+        // Add button to the header actions
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) {
+            headerActions.appendChild(themeToggleBtn);
+        }
+    }
+    
+    // Update icon based on current theme
+    const currentTheme = document.documentElement.getAttribute('data-color-scheme') || 'light';
+    const iconElement = themeToggleBtn.querySelector('.theme-toggle-icon');
+    if (iconElement) {
+        iconElement.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
+    }
+    
+    // Add event listener to theme toggle button
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-color-scheme') || 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        // Set the new theme
+        document.documentElement.setAttribute('data-color-scheme', newTheme);
+        
+        // Save preference to localStorage
+        localStorage.setItem('color-scheme', newTheme);
+        
+        // Update icon
+        const iconElement = themeToggleBtn.querySelector('.theme-toggle-icon');
+        if (iconElement) {
+            iconElement.innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        // Announce theme change to screen readers
+        const announcer = document.createElement('div');
+        announcer.setAttribute('aria-live', 'polite');
+        announcer.className = 'sr-only';
+        announcer.textContent = `Theme changed to ${newTheme} mode`;
+        document.body.appendChild(announcer);
+        
+        // Remove announcer after it's been read
+        setTimeout(() => {
+            document.body.removeChild(announcer);
+        }, 3000);
+    });
+    
+    // Listen for system preference changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        // Only apply if user hasn't set a preference
+        if (!localStorage.getItem('color-scheme')) {
+            const newTheme = e.matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-color-scheme', newTheme);
+            
+            // Update icon
+            const iconElement = themeToggleBtn.querySelector('.theme-toggle-icon');
+            if (iconElement) {
+                iconElement.innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
+            }
+        }
+    });
+}
+
+// Add reduced motion support
+function setupReducedMotionSupport() {
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if (prefersReducedMotion) {
+        document.documentElement.classList.add('reduced-motion');
+    }
+    
+    // Listen for preference changes
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+        if (e.matches) {
+            document.documentElement.classList.add('reduced-motion');
+        } else {
+            document.documentElement.classList.remove('reduced-motion');
+        }
+    });
+}
+
 // Initialize the application when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initializing ASIL Calculator v16...');
+        setupThemeToggle(); // Add theme toggle before calculator initialization
+        setupReducedMotionSupport(); // Add reduced motion support
         window.asilCalculator = new ASILCalculator();
+        setupTabSwitching(); // Add this line for the tab functionality
     });
 } else {
     console.log('DOM ready - Initializing ASIL Calculator v16...');
+    setupThemeToggle(); // Add theme toggle before calculator initialization
+    setupReducedMotionSupport(); // Add reduced motion support
     window.asilCalculator = new ASILCalculator();
+    setupTabSwitching(); // Add this line for the tab functionality
+}
+
+// Tab switching functionality for the redesigned Component Analysis panel
+function setupTabSwitching() {
+    const manualTabInput = document.getElementById('manualTabInput');
+    const databaseTabInput = document.getElementById('databaseTabInput');
+    const manualInputPanel = document.getElementById('manualInputPanel');
+    const databaseInputPanel = document.getElementById('databaseInputPanel');
+
+    if (manualTabInput && databaseTabInput && manualInputPanel && databaseInputPanel) {
+        // Set initial state
+        manualInputPanel.style.display = manualTabInput.checked ? 'block' : 'none';
+        databaseInputPanel.style.display = databaseTabInput.checked ? 'block' : 'none';
+
+        // Add event listeners
+        manualTabInput.addEventListener('change', function() {
+            if (this.checked) {
+                manualInputPanel.style.display = 'block';
+                databaseInputPanel.style.display = 'none';
+            }
+        });
+
+        databaseTabInput.addEventListener('change', function() {
+            if (this.checked) {
+                manualInputPanel.style.display = 'none';
+                databaseInputPanel.style.display = 'block';
+            }
+        });
+    }
 }

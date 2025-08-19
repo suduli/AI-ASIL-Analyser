@@ -9,11 +9,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
     <div class="app-container">
         <!-- Header -->
         <header class="header">
             <div class="container">
-                <h1 class="title">ISO 26262 ASIL Calculator</h1>
+                <h1 class="title">Smart ASIL Analyzer: AI for ISO 26262</h1>
                 <p class="subtitle">Design And Implemeneted By Suduli</p>
                 <div class="header-actions">
                     <button class="btn btn--outline settings-btn" id="settingsBtn">
@@ -84,85 +86,210 @@
         </section>
 
         <!-- Main Content -->
-        <main class="main">
+        <main class="main" id="main-content">
             <div class="container">
-                <!-- Component Input -->
-                <section class="input-section glass-panel fade-in-up">
-                    <h2>Component Analysis</h2>
-                    <div class="input-options">
-                        <div class="form-group">
-                            <label class="form-label">Input Method:</label>
-                            <div class="radio-group">
-                                <label class="radio-option">
-                                    <input type="radio" name="inputMethod" value="manual" checked="">
+                <!-- Component Analysis Panel -->
+                <section class="analysis-panel glass-panel fade-in-up">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Component Analysis</h2>
+                        <p class="panel-subtitle">Analyze automotive components for ISO 26262 ASIL classification</p>
+                    </div>
+                    
+                    <!-- Method Selection Tabs -->
+                    <div class="method-tabs-container">
+                        <div class="method-tabs">
+                            <label class="method-tab" for="manualTabInput">
+                                <input type="radio" id="manualTabInput" name="inputMethod" value="manual" checked>
+                                <div class="method-tab-content">
+                                    <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 11.08V8l-6-6H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V11.08z"/>
+                                        <path d="M13 2v6h6"/>
+                                    </svg>
                                     <span>Manual Description</span>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="inputMethod" value="database">
-                                    <span>From Database</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="manual-input" id="manualInput" style="display: block;">
-                        <div class="form-group">
-                            <label class="form-label" for="componentInput">
-                                Describe your automotive component or system:
+                                </div>
                             </label>
-                            <textarea class="form-control component-input" id="componentInput" placeholder="e.g., Electronic brake system controller that manages brake force distribution..." rows="4"></textarea>
+                            <label class="method-tab" for="databaseTabInput">
+                                <input type="radio" id="databaseTabInput" name="inputMethod" value="database">
+                                <div class="method-tab-content">
+                                    <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                    </svg>
+                                    <span>From Database</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="database-input hidden" id="databaseInput" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label" for="componentSelect">Select Component from Database:</label>
-                            <select class="form-control" id="componentSelect"><option value="">Choose a component...</option><option value="adaptive_cruise_control">Adaptive Cruise Control (ADAS)</option><option value="lane_keeping_assist">Lane Keeping Assist (ADAS)</option><option value="automatic_emergency_braking">Automatic Emergency Braking (ADAS)</option><option value="blind_spot_monitoring">Blind Spot Monitoring (ADAS)</option><option value="traffic_sign_recognition">Traffic Sign Recognition (ADAS)</option><option value="abs_control_unit">ABS Control Unit (Braking)</option><option value="electronic_brake_distribution">Electronic Brake Distribution (Braking)</option><option value="brake_assist_system">Brake Assist System (Braking)</option><option value="electronic_parking_brake">Electronic Parking Brake (Braking)</option><option value="engine_control_unit">Engine Control Unit (Powertrain)</option><option value="transmission_control_unit">Transmission Control Unit (Powertrain)</option><option value="hybrid_battery_management">Hybrid Battery Management System (Powertrain)</option><option value="electric_power_steering">Electric Power Steering (Steering)</option><option value="active_front_steering">Active Front Steering (Steering)</option><option value="airbag_control_unit">Airbag Control Unit (Safety)</option><option value="electronic_stability_control">Electronic Stability Control (Safety)</option></select>
+                    <!-- Tab Content -->
+                    <div class="tab-content-container">
+                        <!-- Manual Input Panel -->
+                        <div class="tab-content" id="manualInputPanel" style="display: block;">
+                            <div class="input-card">
+                                <div class="input-header">
+                                    <div class="input-title">
+                                        <svg class="input-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <div>
+                                            <h3>Describe Component</h3>
+                                            <p class="input-subtitle">Provide detailed information about the component's function and safety requirements</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-body">
+                                    <textarea 
+                                        class="component-textarea" 
+                                        id="componentInput" 
+                                        placeholder="e.g., Electronic brake system controller that manages brake force distribution..." 
+                                        rows="5"
+                                        aria-label="Component description input"
+                                    ></textarea>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Manual Adjustments:</label>
-                            <div class="sec-adjustments">
-                                <div class="adjustment-item">
-                                    <label>Severity (S):</label>
-                                    <select class="form-control adjustment-select" id="severitySelect">
-                                        <option value="">Auto</option>
-                                        <option value="0">S0</option>
-                                        <option value="1">S1</option>
-                                        <option value="2">S2</option>
-                                        <option value="3">S3</option>
-                                    </select>
+
+                        <!-- Database Input Panel -->
+                        <div class="tab-content" id="databaseInputPanel" style="display: none;">
+                            <div class="input-card">
+                                <div class="input-header">
+                                    <div class="input-title">
+                                        <svg class="input-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                            <polyline points="3.29 7 12 12 20.71 7"></polyline>
+                                            <line x1="12" y1="22" x2="12" y2="12"></line>
+                                        </svg>
+                                        <div>
+                                            <h3>Select Component</h3>
+                                            <p class="input-subtitle">Choose from pre-analyzed components to start with known parameters</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="adjustment-item">
-                                    <label>Exposure (E):</label>
-                                    <select class="form-control adjustment-select" id="exposureSelect">
-                                        <option value="">Auto</option>
-                                        <option value="0">E0</option>
-                                        <option value="1">E1</option>
-                                        <option value="2">E2</option>
-                                        <option value="3">E3</option>
-                                        <option value="4">E4</option>
-                                    </select>
-                                </div>
-                                <div class="adjustment-item">
-                                    <label>Controllability (C):</label>
-                                    <select class="form-control adjustment-select" id="controllabilitySelect">
-                                        <option value="">Auto</option>
-                                        <option value="0">C0</option>
-                                        <option value="1">C1</option>
-                                        <option value="2">C2</option>
-                                        <option value="3">C3</option>
-                                    </select>
+                                <div class="input-body">
+                                    <div class="select-container">
+                                        <select class="component-select" id="componentSelect" aria-label="Select a component from database">
+                                            <option value="">Choose a component...</option>
+                                            <option value="adaptive_cruise_control">Adaptive Cruise Control (ADAS)</option>
+                                            <option value="lane_keeping_assist">Lane Keeping Assist (ADAS)</option>
+                                            <option value="automatic_emergency_braking">Automatic Emergency Braking (ADAS)</option>
+                                            <option value="blind_spot_monitoring">Blind Spot Monitoring (ADAS)</option>
+                                            <option value="traffic_sign_recognition">Traffic Sign Recognition (ADAS)</option>
+                                            <option value="abs_control_unit">ABS Control Unit (Braking)</option>
+                                            <option value="electronic_brake_distribution">Electronic Brake Distribution (Braking)</option>
+                                            <option value="brake_assist_system">Brake Assist System (Braking)</option>
+                                            <option value="electronic_parking_brake">Electronic Parking Brake (Braking)</option>
+                                            <option value="engine_control_unit">Engine Control Unit (Powertrain)</option>
+                                            <option value="transmission_control_unit">Transmission Control Unit (Powertrain)</option>
+                                            <option value="hybrid_battery_management">Hybrid Battery Management System (Powertrain)</option>
+                                            <option value="electric_power_steering">Electric Power Steering (Steering)</option>
+                                            <option value="active_front_steering">Active Front Steering (Steering)</option>
+                                            <option value="airbag_control_unit">Airbag Control Unit (Safety)</option>
+                                            <option value="electronic_stability_control">Electronic Stability Control (Safety)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Parameter Adjustments -->
+                                    <div class="parameters-card">
+                                        <div class="parameters-header">
+                                            <h3>Manual Adjustments</h3>
+                                            <p>Fine-tune the safety parameters for your component</p>
+                                        </div>
+                                        <div class="parameters-grid">
+                                            <!-- Severity Parameter -->
+                                            <div class="parameter-item">
+                                                <div class="parameter-header">
+                                                    <svg class="parameter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                                        <line x1="12" y1="9" x2="12" y2="13"/>
+                                                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                                    </svg>
+                                                    <div>
+                                                        <h4>Severity (S)</h4>
+                                                        <p>Impact of failure</p>
+                                                    </div>
+                                                </div>
+                                                <div class="parameter-control">
+                                                    <select class="parameter-select" id="severitySelect" aria-label="Select severity level">
+                                                        <option value="">Auto</option>
+                                                        <option value="0">S0 - No injuries</option>
+                                                        <option value="1">S1 - Light/moderate injuries</option>
+                                                        <option value="2">S2 - Severe/life-threatening</option>
+                                                        <option value="3">S3 - Fatal injuries</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Exposure Parameter -->
+                                            <div class="parameter-item">
+                                                <div class="parameter-header">
+                                                    <svg class="parameter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="10"/>
+                                                        <path d="M12 6v6l4 2"/>
+                                                    </svg>
+                                                    <div>
+                                                        <h4>Exposure (E)</h4>
+                                                        <p>Frequency of occurrence</p>
+                                                    </div>
+                                                </div>
+                                                <div class="parameter-control">
+                                                    <select class="parameter-select" id="exposureSelect" aria-label="Select exposure level">
+                                                        <option value="">Auto</option>
+                                                        <option value="0">E0 - Incredibly rare</option>
+                                                        <option value="1">E1 - Very rare</option>
+                                                        <option value="2">E2 - Rare</option>
+                                                        <option value="3">E3 - Occasional</option>
+                                                        <option value="4">E4 - Frequent</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Controllability Parameter -->
+                                            <div class="parameter-item">
+                                                <div class="parameter-header">
+                                                    <svg class="parameter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="3"/>
+                                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                                    </svg>
+                                                    <div>
+                                                        <h4>Controllability (C)</h4>
+                                                        <p>Ability to prevent harm</p>
+                                                    </div>
+                                                </div>
+                                                <div class="parameter-control">
+                                                    <select class="parameter-select" id="controllabilitySelect" aria-label="Select controllability level">
+                                                        <option value="">Auto</option>
+                                                        <option value="0">C0 - Controllable in general</option>
+                                                        <option value="1">C1 - Simply controllable</option>
+                                                        <option value="2">C2 - Normally controllable</option>
+                                                        <option value="3">C3 - Difficult to control</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <button class="btn btn--primary btn--lg analyze-btn" id="analyzeBtn">
-                        <span class="btn-text">Analyze ASIL</span>
-                        <div class="spinner hidden" id="spinner">
-                            <div class="spinner-circle"></div>
-                        </div>
-                    </button>
+                    <!-- Analysis Button -->
+                    <div class="action-container">
+                        <button class="analyze-button" id="analyzeBtn" aria-label="Analyze ASIL">
+                            <svg class="analyze-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.29 7 12 12 20.71 7"/>
+                                <line x1="12" y1="22" x2="12" y2="12"/>
+                            </svg>
+                            <span>Analyze ASIL</span>
+                            <div class="spinner hidden" id="spinner" aria-hidden="true">
+                                <svg class="spinner-circle" viewBox="0 0 50 50">
+                                    <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
                 </section>
 
                 <!-- Error Banner -->
