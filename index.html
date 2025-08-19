@@ -1,424 +1,825 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISO 26262 ASIL Analyzer v5 - AI-Enhanced Automotive Safety Platform</title>
-    <link rel="stylesheet" href="style.css">
+    <title>ISO 26262 ASIL Analyser</title>
+    <link rel="stylesheet" href="./style.css">
+    <!-- Futuristic fonts & icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="animated-background"></div>
-    
-    <div class="container">
-        <!-- Header Section -->
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
+    <div class="app-container">
+        <!-- Header -->
         <header class="header">
-            <div class="header__content">
-                <div class="header__top">
-                    <h1 class="header__title">ISO 26262 ASIL Analyzer</h1>
-                    <div class="header__controls">
-                        <button type="button" id="settings-btn" class="settings-btn" title="AI Settings">
-                            <span class="settings-icon">⚙️</span>
-                        </button>
-                    </div>
+            <div class="container">
+                <h1 class="title">Smart ASIL Analyzer: AI for ISO 26262</h1>
+                <p class="subtitle">Design And Implemented By Suduli</p>
+                <div class="header-actions">
+                    <button class="btn btn--outline settings-btn" id="settingsBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        Settings
+                    </button>
+                    <button class="btn btn--outline database-btn" id="databaseBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                        Database
+                    </button>
+                    <button class="btn btn--outline asil-guide-btn" id="asilGuideBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        ASIL Guide
+                    </button>
                 </div>
-                <div class="header__subtitle">v5.0 - AI Enhanced</div>
-                <p class="header__description">Next-Generation Automotive Safety Integrity Level Determination with AI Validation</p>
-                <div class="header__tech-line"></div>
             </div>
         </header>
 
+    <!-- Futuristic Hero -->
+    <section class="hero-section fade-in-up">
+            <div class="hero-inner container">
+                <div class="hero-copy">
+                    <h1 class="hero-title">Next‑Gen ASIL Calculator</h1>
+                    <p class="hero-sub">Rapid, AI-assisted safety assessments with a futuristic interface — glass, glow and motion.</p>
+                    <div class="hero-ctas">
+                        <a class="btn btn--primary cta-neon" href="#componentInput">Analyze Now <i class="fas fa-rocket"></i></a>
+                        <a class="btn btn--outline cta-ghost" href="#asilGuideModal">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="glow-orbit"></div>
+                    <div class="glass-card small">Realtime AI Insights</div>
+                    <div class="glass-card medium">ISO 26262 Guidance</div>
+                    <div class="glass-card large">Interactive Analysis</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Stats -->
+        <section class="dashboard-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <h3>Total Components</h3>
+                        <div class="stat-value" id="totalComponents">16</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <h3>API Status</h3>
+                        <div class="stat-value" id="apiStatus">Not Configured</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <h3>Analyses Today</h3>
+                        <div class="stat-value" id="analysesCount">1</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main" id="main-content">
+            <div class="container">
+                <!-- Component Analysis Panel -->
+                <section class="analysis-panel glass-panel fade-in-up">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Component Analysis</h2>
+                        <p class="panel-subtitle">Analyze automotive components for ISO 26262 ASIL classification</p>
+                    </div>
+                    
+                    <!-- Method Selection Tabs -->
+                    <div class="method-tabs-container">
+                        <div class="method-tabs">
+                            <label class="method-tab" for="manualTabInput">
+                                <input type="radio" id="manualTabInput" name="inputMethod" value="manual" checked>
+                                <div class="method-tab-content">
+                                    <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 11.08V8l-6-6H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V11.08z"/>
+                                        <path d="M13 2v6h6"/>
+                                    </svg>
+                                    <span>Manual Description</span>
+                                </div>
+                            </label>
+                            <label class="method-tab" for="databaseTabInput">
+                                <input type="radio" id="databaseTabInput" name="inputMethod" value="database">
+                                <div class="method-tab-content">
+                                    <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                    </svg>
+                                    <span>From Database</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content-container">
+                        <!-- Manual Input Panel -->
+                        <div class="tab-content" id="manualInputPanel" style="display: block;">
+                            <div class="input-card">
+                                <div class="input-header">
+                                    <div class="input-title">
+                                        <svg class="input-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <div>
+                                            <h3>Describe Component</h3>
+                                            <p class="input-subtitle">Provide detailed information about the component's function and safety requirements</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-body">
+                                    <textarea 
+                                        class="component-textarea" 
+                                        id="componentInput" 
+                                        placeholder="e.g., Electronic brake system controller that manages brake force distribution..." 
+                                        rows="5"
+                                        aria-label="Component description input"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Database Input Panel -->
+                        <div class="tab-content" id="databaseInputPanel" style="display: none;">
+                            <div class="input-card">
+                                <div class="input-header">
+                                    <div class="input-title">
+                                        <svg class="input-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                            <polyline points="3.29 7 12 12 20.71 7"></polyline>
+                                            <line x1="12" y1="22" x2="12" y2="12"></line>
+                                        </svg>
+                                        <div>
+                                            <h3>Select Component</h3>
+                                            <p class="input-subtitle">Choose from pre-analyzed components to start with known parameters</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-body">
+                                    <div class="select-container">
+                                        <select class="component-select" id="componentSelect" aria-label="Select a component from database">
+                                            <option value="">Choose a component...</option>
+                                            <option value="adaptive_cruise_control">Adaptive Cruise Control (ADAS)</option>
+                                            <option value="lane_keeping_assist">Lane Keeping Assist (ADAS)</option>
+                                            <option value="automatic_emergency_braking">Automatic Emergency Braking (ADAS)</option>
+                                            <option value="blind_spot_monitoring">Blind Spot Monitoring (ADAS)</option>
+                                            <option value="traffic_sign_recognition">Traffic Sign Recognition (ADAS)</option>
+                                            <option value="abs_control_unit">ABS Control Unit (Braking)</option>
+                                            <option value="electronic_brake_distribution">Electronic Brake Distribution (Braking)</option>
+                                            <option value="brake_assist_system">Brake Assist System (Braking)</option>
+                                            <option value="electronic_parking_brake">Electronic Parking Brake (Braking)</option>
+                                            <option value="engine_control_unit">Engine Control Unit (Powertrain)</option>
+                                            <option value="transmission_control_unit">Transmission Control Unit (Powertrain)</option>
+                                            <option value="hybrid_battery_management">Hybrid Battery Management System (Powertrain)</option>
+                                            <option value="electric_power_steering">Electric Power Steering (Steering)</option>
+                                            <option value="active_front_steering">Active Front Steering (Steering)</option>
+                                            <option value="airbag_control_unit">Airbag Control Unit (Safety)</option>
+                                            <option value="electronic_stability_control">Electronic Stability Control (Safety)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Parameter Adjustments -->
+                                    <div class="parameters-card">
+                                        <div class="parameters-header">
+                                            <h3>Manual Adjustments</h3>
+                                            <p>Fine-tune the safety parameters for your component</p>
+                                        </div>
+                                        <div class="parameters-grid">
+                                            <!-- Severity Parameter -->
+                                            <div class="parameter-item">
+                                                <div class="parameter-header">
+                                                    <svg class="parameter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                                        <line x1="12" y1="9" x2="12" y2="13"/>
+                                                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                                    </svg>
+                                                    <div>
+                                                        <h4>Severity (S)</h4>
+                                                        <p>Impact of failure</p>
+                                                    </div>
+                                                </div>
+                                                <div class="parameter-control">
+                                                    <select class="parameter-select" id="severitySelect" aria-label="Select severity level">
+                                                        <option value="">Auto</option>
+                                                        <option value="0">S0 - No injuries</option>
+                                                        <option value="1">S1 - Light/moderate injuries</option>
+                                                        <option value="2">S2 - Severe/life-threatening</option>
+                                                        <option value="3">S3 - Fatal injuries</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Exposure Parameter -->
+                                            <div class="parameter-item">
+                                                <div class="parameter-header">
+                                                    <svg class="parameter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="10"/>
+                                                        <path d="M12 6v6l4 2"/>
+                                                    </svg>
+                                                    <div>
+                                                        <h4>Exposure (E)</h4>
+                                                        <p>Frequency of occurrence</p>
+                                                    </div>
+                                                </div>
+                                                <div class="parameter-control">
+                                                    <select class="parameter-select" id="exposureSelect" aria-label="Select exposure level">
+                                                        <option value="">Auto</option>
+                                                        <option value="0">E0 - Incredibly rare</option>
+                                                        <option value="1">E1 - Very rare</option>
+                                                        <option value="2">E2 - Rare</option>
+                                                        <option value="3">E3 - Occasional</option>
+                                                        <option value="4">E4 - Frequent</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Controllability Parameter -->
+                                            <div class="parameter-item">
+                                                <div class="parameter-header">
+                                                    <svg class="parameter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="3"/>
+                                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                                    </svg>
+                                                    <div>
+                                                        <h4>Controllability (C)</h4>
+                                                        <p>Ability to prevent harm</p>
+                                                    </div>
+                                                </div>
+                                                <div class="parameter-control">
+                                                    <select class="parameter-select" id="controllabilitySelect" aria-label="Select controllability level">
+                                                        <option value="">Auto</option>
+                                                        <option value="0">C0 - Controllable in general</option>
+                                                        <option value="1">C1 - Simply controllable</option>
+                                                        <option value="2">C2 - Normally controllable</option>
+                                                        <option value="3">C3 - Difficult to control</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Button -->
+                    <div class="action-container">
+                        <button class="analyze-button" id="analyzeBtn" aria-label="Analyze ASIL">
+                            <svg class="analyze-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.29 7 12 12 20.71 7"/>
+                                <line x1="12" y1="22" x2="12" y2="12"/>
+                            </svg>
+                            <span>Analyze ASIL</span>
+                            <div class="spinner hidden" id="spinner" aria-hidden="true">
+                                <svg class="spinner-circle" viewBox="0 0 50 50">
+                                    <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Error Banner -->
+                <div class="error-banner hidden" id="errorBanner" style="display: none;">
+                    <div class="error-content">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span id="errorMessage">Error message here</span>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <section class="results-section fade-in-up" id="resultsSection" style="display: block;">
+                    <!-- Feature Details -->
+                    <div class="glass-panel feature-details">
+                        <h2>Feature Details</h2>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Component Name:</label>
+                                <span id="componentName">Engine Control Unit</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Category:</label>
+                                <span id="componentCategory">Powertrain</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- About This Feature -->
+                    <div class="glass-panel about-feature fade-in-up">
+                        <h3>About This Feature</h3>
+                        <p id="featureDescription" class="about-feature-description"></p>
+                    </div>
+                    <div class="glass-panel">
+                        <h2>ASIL Analysis Results</h2>
+                        
+                        <!-- Analysis Details -->
+                        <div class="analysis-grid">
+                            <div class="analysis-card">
+                                <h3>Severity (S)</h3>
+                                <div class="value-display" id="severityValue">S3</div>
+                                <p class="description" id="severityDesc">Uncontrolled acceleration can be fatal (S3)</p>
+                            </div>
+                            <div class="analysis-card">
+                                <h3>Exposure (E)</h3>
+                                <div class="value-display" id="exposureValue">E4</div>
+                                <p class="description" id="exposureDesc">Engine operates continuously (E4)</p>
+                            </div>
+                            <div class="analysis-card">
+                                <h3>Controllability (C)</h3>
+                                <div class="value-display" id="controllabilityValue">C2</div>
+                                <p class="description" id="controllabilityDesc">Driver has brake and ignition control (C2)</p>
+                            </div>
+                        </div>
+
+                        <!-- ASIL Result -->
+                        <div class="asil-result">
+                            <h3>Final ASIL Rating</h3>
+                            <div class="asil-badge asil-d" id="asilBadge">
+                                <span class="asil-level">ASIL D</span>
+                            </div>
+                            <p class="asil-explanation" id="asilExplanation">ASIL D - Highest integrity level. Most stringent safety requirements and processes. Extensive verification and validation needed.</p>
+                            <div class="save-asil-section">
+                                <button class="btn btn--primary btn--lg" id="saveToDbBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                        <polyline points="7 3 7 8 15 8"></polyline>
+                                    </svg>
+                                    Save ASIL to Database
+                                </button>
+                                <div class="save-status hidden" id="saveStatus"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3-COLUMN LAYOUT: Hazards, Failure Modes, Safety Recommendations -->
+                    <div class="safety-analysis-grid">
+                        <div class="glass-panel hazards-section">
+                            <h3>Potential Hazards</h3>
+                            <ul class="hazards-list" id="hazardsList"><li>Unintended acceleration</li><li>Engine stall</li><li>Excessive emissions</li></ul>
+                        </div>
+
+                        <div class="glass-panel failure-modes">
+                            <h3>Failure Modes</h3>
+                            <ul class="failure-list" id="failureList"><li>ECU hardware failure</li><li>Software corruption</li><li>Sensor input error</li></ul>
+                        </div>
+
+                        <div class="glass-panel safety-recommendations">
+                            <h3>ISO 26262 Safety Recommendations</h3>
+                            <ul class="recommendations-list" id="recommendationsList"><li>Throttle redundancy</li><li>Limp-home mode</li><li>Real-time monitoring</li></ul>
+                        </div>
+                    </div>
+
+                    <!-- AI vs Database Comparison -->
+                    <div class="glass-panel comparison-section">
+                        <h3>AI vs Database Comparison</h3>
+                        <div class="comparison-table-container">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>AI Analysis</th>
+                                        <th>Database</th>
+                                        <th>Match</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparisonTableBody">
+                                    <tr>
+                                        <td>Severity</td>
+                                        <td id="aiSeverity">S3</td>
+                                        <td id="dbSeverity">S3</td>
+                                        <td id="severityMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Exposure</td>
+                                        <td id="aiExposure">E4</td>
+                                        <td id="dbExposure">E4</td>
+                                        <td id="exposureMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Controllability</td>
+                                        <td id="aiControllability">C2</td>
+                                        <td id="dbControllability">C2</td>
+                                        <td id="controllabilityMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Final ASIL</td>
+                                        <td id="aiAsil">D</td>
+                                        <td id="dbAsil">D</td>
+                                        <td id="asilMatch" class="match-yes">✓ Match</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
         <!-- Settings Modal -->
-        <div id="settings-modal" class="modal hidden">
+        <div class="modal hidden" id="settingsModal">
             <div class="modal-backdrop"></div>
-            <div class="modal-container">
+            <div class="modal-content glass-panel">
                 <div class="modal-header">
-                    <h2 class="modal-title">🤖 AI Provider Settings</h2>
-                    <button type="button" id="close-modal" class="modal-close">✕</button>
+                    <h2>API Settings</h2>
+                    <button class="modal-close" id="closeSettingsModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
+                
                 <div class="modal-body">
-                    <div class="settings-section">
-                        <h3 class="settings-title">AI Provider Selection</h3>
-                        <div class="provider-options">
-                            <label class="radio-option">
-                                <input type="radio" name="ai-provider" value="openai" checked>
-                                <span class="radio-custom"></span>
-                                <span class="radio-label">Any AI API Key</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="ai-provider" value="anthropic">
-                                <span class="radio-custom"></span>
-                                <span class="radio-label">Anthropic Claude</span>
-                            </label>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="providerSelect">AI Provider:</label>
+                        <select class="form-control" id="providerSelect">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="openrouter">OpenRouter</option>
+                        </select>
                     </div>
-                    
-                    <div class="settings-section">
-                        <h3 class="settings-title">API Configuration</h3>
-                        <div class="api-config">
-                            <div class="form-group">
-                                <label for="openai-key" class="form-label">OpenAI API Key</label>
-                                <input type="password" id="openai-key" class="form-control api-key-input" placeholder="sk-..." />
+
+                    <div class="form-group">
+                        <label class="form-label" for="openRouterModelSelect">OpenRouter Model:</label>
+                        <select class="form-control" id="openRouterModelSelect" style="display: none;">
+                            <option value="openai/gpt-oss-20b">GPT-OSS-20B</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="apiKeyInput">API Key:</label>
+                        <input type="password" class="form-control" id="apiKeyInput" placeholder="Enter your API key">
+                        <div class="key-status" id="keyStatus"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn--outline test-key-btn" id="testKeyBtn">
+                            Test API Key
+                        </button>
+                        <button class="btn btn--primary" id="saveSettingsBtn" disabled="">
+                            Save Settings
+                        </button>
+                    </div>
+
+                    <!-- API Key Instructions -->
+                    <div class="api-instructions">
+                        <h4>How to obtain API keys:</h4>
+                        <div class="provider-instructions">
+                            <div class="instruction-item">
+                                <strong>OpenAI:</strong>
+                                <p>Visit <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> and create a new API key</p>
                             </div>
-                            <div class="form-group">
-                                <label for="anthropic-key" class="form-label">Anthropic API Key</label>
-                                <input type="password" id="anthropic-key" class="form-control api-key-input" placeholder="sk-ant-..." />
+                            <div class="instruction-item">
+                                <strong>Anthropic:</strong>
+                                <p>Visit <a href="https://console.anthropic.com/keys" target="_blank">console.anthropic.com/keys</a> and generate a new key</p>
+                            </div>
+                            <div class="instruction-item">
+                                <strong>OpenRouter:</strong>
+                                <p>Visit <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> to create an API key</p>
                             </div>
                         </div>
+                        <p class="demo-note">
+                            <strong>Demo Mode:</strong> Use placeholder keys for testing: "demo-openai-key", "demo-anthropic-key", or "demo-openrouter-key"
+                        </p>
                     </div>
-                    
-                    <div class="settings-section">
-                        <h3 class="settings-title">Auto-Learning</h3>
-                        <label class="toggle-option">
-                            <input type="checkbox" id="auto-learn" />
-                            <span class="toggle-slider"></span>
-                            <span class="toggle-label">Auto-write AI-validated results to database after confirmation</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="save-settings" class="btn btn--primary">Save Settings</button>
-                    <button type="button" id="cancel-settings" class="btn btn--secondary">Cancel</button>
                 </div>
             </div>
         </div>
 
-        <!-- Input Section -->
-        <section class="input-section">
-            <div class="card glass-panel">
-                <div class="card__body">
-                    <h2 class="section-title">Component Analysis Hub</h2>
-                    
-                    <!-- Quick Database Browse -->
-                    <div class="form-group">
-                        <label for="database-select" class="form-label futuristic-label">
-                            <span class="label-icon">🗃️</span>
-                            Quick Select from Database (Instant Results)
-                        </label>
-                        <select id="database-select" class="form-control futuristic-input">
-                            <option value="">Choose from known automotive components...</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Manual Input with Auto-suggest -->
-                    <div class="form-group">
-                        <label for="component-input" class="form-label futuristic-label">
-                            <span class="label-icon">🔍</span>
-                            Or Enter Component Name
-                        </label>
-                        <div class="input-container">
-                            <input type="text" id="component-input" class="form-control futuristic-input" placeholder="e.g., body control module, brake system, power steering..." />
-                            <div class="input-glow"></div>
+        <!-- Database Modal -->
+        <div class="modal hidden" id="databaseModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel database-modal-content">
+                <div class="modal-header">
+                    <h2>Components Database</h2>
+                    <button class="modal-close" id="closeDatabaseModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="database-controls">
+                        <div class="form-group">
+                            <input type="text" class="form-control search-input" id="searchComponents" placeholder="Search components...">
                         </div>
-                        <div class="analysis-controls">
-                            <button type="button" id="analyze-btn" class="btn btn--primary futuristic-btn">
-                                <span class="btn-bg"></span>
-                                <span class="btn-content">
-                                    <span id="analyze-text">⚡ Analyze with AI Validation</span>
-                                    <span id="analyze-spinner" class="spinner hidden">🔄 Analyzing...</span>
-                                </span>
-                            </button>
+                        <div class="database-actions">
+                            <button class="btn btn--outline" id="addComponentBtn">Add New Component</button>
+                            <select class="form-control category-filter" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="ADAS">ADAS</option>
+                                <option value="Braking">Braking</option>
+                                <option value="Powertrain">Powertrain</option>
+                                <option value="Steering">Steering</option>
+                                <option value="Safety">Safety</option>
+                            </select>
                         </div>
                     </div>
-                    
-                    <!-- Discrepancy Warning Banner -->
-                    <div id="discrepancy-banner" class="discrepancy-banner glass-panel hidden">
-                        <div class="banner-content">
-                            <div class="banner-icon">⚠️</div>
-                            <div class="banner-text">
-                                <h4>Database vs AI Discrepancy Detected</h4>
-                                <p id="discrepancy-details"></p>
-                            </div>
-                            <button type="button" id="adopt-ai-btn" class="btn btn--primary adopt-btn">
-                                <span>Adopt AI Values</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="help-text glass-panel">
-                        <div class="help-icon">💡</div>
-                        <small>Enhanced with AI validation - configure your preferred AI provider in settings. Database results are shown instantly, then validated against AI analysis for accuracy verification.</small>
+
+                    <div class="components-table-container">
+                        <table class="components-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>ASIL</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="componentsTableBody"><tr>
+                <td>Adaptive Cruise Control</td>
+                <td>ADAS</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="adaptive_cruise_control">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="adaptive_cruise_control">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Lane Keeping Assist</td>
+                <td>ADAS</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="lane_keeping_assist">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="lane_keeping_assist">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Automatic Emergency Braking</td>
+                <td>ADAS</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="automatic_emergency_braking">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="automatic_emergency_braking">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Blind Spot Monitoring</td>
+                <td>ADAS</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="blind_spot_monitoring">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="blind_spot_monitoring">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Traffic Sign Recognition</td>
+                <td>ADAS</td>
+                <td>ASIL A</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="traffic_sign_recognition">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="traffic_sign_recognition">Delete</button>
+                </td>
+            </tr><tr>
+                <td>ABS Control Unit</td>
+                <td>Braking</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="abs_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="abs_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electronic Brake Distribution</td>
+                <td>Braking</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electronic_brake_distribution">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electronic_brake_distribution">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Brake Assist System</td>
+                <td>Braking</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="brake_assist_system">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="brake_assist_system">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electronic Parking Brake</td>
+                <td>Braking</td>
+                <td>ASIL B</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electronic_parking_brake">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electronic_parking_brake">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Engine Control Unit</td>
+                <td>Powertrain</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="engine_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="engine_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Transmission Control Unit</td>
+                <td>Powertrain</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="transmission_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="transmission_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Hybrid Battery Management System</td>
+                <td>Powertrain</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="hybrid_battery_management">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="hybrid_battery_management">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electric Power Steering</td>
+                <td>Steering</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electric_power_steering">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electric_power_steering">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Active Front Steering</td>
+                <td>Steering</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="active_front_steering">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="active_front_steering">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Airbag Control Unit</td>
+                <td>Safety</td>
+                <td>ASIL C</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="airbag_control_unit">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="airbag_control_unit">Delete</button>
+                </td>
+            </tr><tr>
+                <td>Electronic Stability Control</td>
+                <td>Safety</td>
+                <td>ASIL D</td>
+                <td class="table-actions">
+                    <button class="btn btn--outline btn-sm edit-component-btn" data-key="electronic_stability_control">Edit</button>
+                    <button class="btn btn--outline btn-sm delete-component-btn" data-key="electronic_stability_control">Delete</button>
+                </td>
+            </tr></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Comparison Section -->
-        <section class="comparison-section" id="comparison-section" style="display: none;">
-            <div class="comparison-grid">
-                <!-- Database Results -->
-                <div class="comparison-card glass-panel">
-                    <div class="card__header">
-                        <h3 class="comparison-title">
-                            <span class="source-icon db-icon">🗃️</span>
-                            Database Result
-                        </h3>
-                        <div class="data-source-pill database">
-                            <div class="pill-glow"></div>
-                            <span>Database</span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="result-display" id="db-result">
-                            <div class="asil-badge" id="db-asil">QM</div>
-                            <div class="parameters" id="db-params">
-                                <span class="param">S0</span>
-                                <span class="param">E1</span>
-                                <span class="param">C1</span>
-                            </div>
-                        </div>
-                    </div>
+        <!-- ASIL Guide Modal -->
+        <div class="modal hidden" id="asilGuideModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2>ASIL Reference Guide</h2>
+                    <button class="modal-close" id="closeAsilGuideModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
-
-                <!-- AI Results -->
-                <div class="comparison-card glass-panel">
-                    <div class="card__header">
-                        <h3 class="comparison-title">
-                            <span class="source-icon ai-icon">🤖</span>
-                            AI Analysis
-                        </h3>
-                        <div class="data-source-pill ai" id="ai-provider-pill">
-                            <div class="pill-glow"></div>
-                            <span id="ai-provider-name">OpenAI GPT-4</span>
-                        </div>
+                
+                <div class="modal-body asil-guide-content">
+                    <div class="guide-section">
+                        <h3>Severity (S)</h3>
+                        <ul>
+                            <li><strong>S0:</strong> No injuries</li>
+                            <li><strong>S1:</strong> Light to moderate injuries</li>
+                            <li><strong>S2:</strong> Severe to life-threatening injuries</li>
+                            <li><strong>S3:</strong> Life-threatening to fatal injuries</li>
+                        </ul>
                     </div>
-                    <div class="card__body">
-                        <div class="result-display" id="ai-result">
-                            <div class="loading-state" id="ai-loading">
-                                <div class="ai-spinner"></div>
-                                <span>AI Analysis in Progress...</span>
-                            </div>
-                            <div class="result-content hidden" id="ai-content">
-                                <div class="asil-badge" id="ai-asil">QM</div>
-                                <div class="parameters" id="ai-params">
-                                    <span class="param">S0</span>
-                                    <span class="param">E1</span>
-                                    <span class="param">C1</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- AI Analysis Section -->
-        <section class="analysis-section" id="analysis-section" style="display: none;">
-            <div class="card glass-panel">
-                <div class="card__body">
-                    <h2 class="section-title">ISO 26262 Analysis & Reasoning</h2>
-                    <div class="analysis-content glass-inner">
-                        <div class="component-info">
-                            <div class="component-header">
-                                <h3 class="component-name">Component: <span id="analyzed-component"></span></h3>
-                                <div class="data-source-pill" id="data-source-pill">
-                                    <div class="pill-glow"></div>
-                                    <span id="source-text">Database</span>
-                                </div>
-                            </div>
-                            <div class="function-description">
-                                <h4 class="analysis-subtitle">🔧 Function & Failure Modes:</h4>
-                                <p id="function-description"></p>
-                            </div>
-                        </div>
-                        <div class="reasoning-sections">
-                            <div class="reasoning-section severity-reasoning glass-inner">
-                                <h4 class="analysis-subtitle">🚨 Severity Analysis (ISO 26262-3):</h4>
-                                <p id="severity-reasoning"></p>
-                            </div>
-                            <div class="reasoning-section exposure-reasoning glass-inner">
-                                <h4 class="analysis-subtitle">📊 Exposure Analysis (ISO 26262-3):</h4>
-                                <p id="exposure-reasoning"></p>
-                            </div>
-                            <div class="reasoning-section controllability-reasoning glass-inner">
-                                <h4 class="analysis-subtitle">🎛️ Controllability Analysis (ISO 26262-3):</h4>
-                                <p id="controllability-reasoning"></p>
-                            </div>
-                        </div>
+                    <div class="guide-section">
+                        <h3>Exposure (E)</h3>
+                        <ul>
+                            <li><strong>E0:</strong> Probability &lt; 0.001%</li>
+                            <li><strong>E1:</strong> Probability 0.001% to 0.1%</li>
+                            <li><strong>E2:</strong> Probability 0.1% to 1%</li>
+                            <li><strong>E3:</strong> Probability 1% to 10%</li>
+                            <li><strong>E4:</strong> Probability &gt; 10%</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>Controllability (C)</h3>
+                        <ul>
+                            <li><strong>C0:</strong> Controllable in general</li>
+                            <li><strong>C1:</strong> Simply controllable</li>
+                            <li><strong>C2:</strong> Normally controllable</li>
+                            <li><strong>C3:</strong> Difficult to control or uncontrollable</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-section">
+                        <h3>ASIL Levels</h3>
+                        <ul>
+                            <li><strong>QM:</strong> Quality Management - No safety requirements</li>
+                            <li><strong>ASIL A:</strong> Lowest integrity level</li>
+                            <li><strong>ASIL B:</strong> Medium-low integrity level</li>
+                            <li><strong>ASIL C:</strong> Medium-high integrity level</li>
+                            <li><strong>ASIL D:</strong> Highest integrity level</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Parameters Table Section -->
-        <section class="parameters-section" id="parameters-section" style="display: none;">
-            <div class="card glass-panel">
-                <div class="card__body">
-                    <h2 class="section-title">Safety Parameters Matrix (ISO 26262)</h2>
-                    <div class="parameters-table">
-                        <div class="table-container">
-                            <table class="param-table futuristic-table">
-                                <thead>
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Current Level</th>
-                                        <th>ISO 26262 Description</th>
-                                        <th>Modify</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="table-row">
-                                        <td><strong>🚨 Severity (S)</strong></td>
-                                        <td><span id="current-severity" class="param-badge"></span></td>
-                                        <td><span id="severity-desc"></span></td>
-                                        <td>
-                                            <select id="severity-select" class="form-control param-select futuristic-select">
-                                                <option value="S0">S0 - No Injuries</option>
-                                                <option value="S1">S1 - Light to Moderate Injuries</option>
-                                                <option value="S2">S2 - Severe Injuries (Survival Probable)</option>
-                                                <option value="S3">S3 - Life-threatening to Fatal Injuries</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr class="table-row">
-                                        <td><strong>📊 Exposure (E)</strong></td>
-                                        <td><span id="current-exposure" class="param-badge"></span></td>
-                                        <td><span id="exposure-desc"></span></td>
-                                        <td>
-                                            <select id="exposure-select" class="form-control param-select futuristic-select">
-                                                <option value="E1">E1 - Very Low Probability</option>
-                                                <option value="E2">E2 - Low Probability</option>
-                                                <option value="E3">E3 - Medium Probability</option>
-                                                <option value="E4">E4 - High Probability</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr class="table-row">
-                                        <td><strong>🎛️ Controllability (C)</strong></td>
-                                        <td><span id="current-controllability" class="param-badge"></span></td>
-                                        <td><span id="controllability-desc"></span></td>
-                                        <td>
-                                            <select id="controllability-select" class="form-control param-select futuristic-select">
-                                                <option value="C1">C1 - Simply Controllable (>99% drivers)</option>
-                                                <option value="C2">C2 - Normally Controllable (>90% drivers)</option>
-                                                <option value="C3">C3 - Difficult to Control (<90% drivers)</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <!-- Add/Edit Component Modal -->
+        <div class="modal hidden" id="componentFormModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2 id="componentFormTitle">Add New Component</h2>
+                    <button class="modal-close" id="closeComponentFormModal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
-            </div>
-        </section>
-
-        <!-- ASIL Result Section -->
-        <section class="asil-section" id="asil-section" style="display: none;">
-            <div class="card glass-panel">
-                <div class="card__body">
-                    <h2 class="section-title">ASIL Determination Result</h2>
-                    <div class="asil-result">
-                        <div class="asil-display">
-                            <div class="asil-label">🎯 Determined ASIL Level (ISO 26262-3, Table 4):</div>
-                            <div class="asil-value" id="asil-value">QM</div>
-                            <div class="asil-pulse"></div>
+                
+                <div class="modal-body">
+                    <form id="componentForm">
+                        <div class="form-group">
+                            <label class="form-label" for="componentNameInput">Component Name:</label>
+                            <input type="text" class="form-control" id="componentNameInput" required="">
                         </div>
-                        <div class="asil-info glass-inner" id="asil-info">
-                            <p>Quality Management (QM) - No safety requirements according to ISO 26262</p>
+                        <div class="form-group">
+                            <label class="form-label" for="componentCategoryInput">Category:</label>
+                            <select class="form-control" id="componentCategoryInput" required="">
+                                <option value="">Select category...</option>
+                                <option value="ADAS">ADAS</option>
+                                <option value="Braking">Braking</option>
+                                <option value="Powertrain">Powertrain</option>
+                                <option value="Steering">Steering</option>
+                                <option value="Safety">Safety</option>
+                            </select>
                         </div>
-                        <div class="calculation-matrix glass-inner">
-                            <h4 class="matrix-title">📐 ASIL Calculation Matrix Position:</h4>
-                            <div class="matrix-display">
-                                <p id="matrix-position">S=<span id="matrix-s"></span>, E=<span id="matrix-e"></span>, C=<span id="matrix-c"></span> → ASIL <span id="matrix-result"></span></p>
+                        <div class="form-group">
+                            <label class="form-label" for="componentDescriptionInput">Description:</label>
+                            <textarea class="form-control" id="componentDescriptionInput" rows="3" required=""></textarea>
+                        </div>
+                        <div class="sec-inputs">
+                            <div class="form-group">
+                                <label class="form-label" for="componentSeverityInput">Severity (S):</label>
+                                <select class="form-control" id="componentSeverityInput" required="">
+                                    <option value="0">S0</option>
+                                    <option value="1">S1</option>
+                                    <option value="2">S2</option>
+                                    <option value="3">S3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="componentExposureInput">Exposure (E):</label>
+                                <select class="form-control" id="componentExposureInput" required="">
+                                    <option value="0">E0</option>
+                                    <option value="1">E1</option>
+                                    <option value="2">E2</option>
+                                    <option value="3">E3</option>
+                                    <option value="4">E4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="componentControllabilityInput">Controllability (C):</label>
+                                <select class="form-control" id="componentControllabilityInput" required="">
+                                    <option value="0">C0</option>
+                                    <option value="1">C1</option>
+                                    <option value="2">C2</option>
+                                    <option value="3">C3</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" id="cancelComponentForm">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Save Component</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </section>
-
-        <!-- ASIL Matrix Reference -->
-        <section class="matrix-section" id="matrix-section" style="display: none;">
-            <div class="card glass-panel">
-                <div class="card__body">
-                    <h3 class="section-title">📊 ISO 26262 ASIL Determination Matrix</h3>
-                    <div class="matrix-table-container">
-                        <div class="table-wrapper">
-                            <table class="asil-matrix-table futuristic-table">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2">Severity</th>
-                                        <th colspan="4">Exposure & Controllability</th>
-                                    </tr>
-                                    <tr>
-                                        <th>E1</th>
-                                        <th>E2</th>
-                                        <th>E3</th>
-                                        <th>E4</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><strong>S0</strong></td>
-                                        <td>QM</td>
-                                        <td>QM</td>
-                                        <td>QM</td>
-                                        <td>QM</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>S1</strong></td>
-                                        <td>QM/QM/QM</td>
-                                        <td>QM/QM/QM</td>
-                                        <td>QM/QM/A</td>
-                                        <td>QM/A/B</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>S2</strong></td>
-                                        <td>QM/QM/QM</td>
-                                        <td>QM/QM/A</td>
-                                        <td>QM/A/B</td>
-                                        <td>A/B/C</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>S3</strong></td>
-                                        <td>QM/QM/A</td>
-                                        <td>QM/A/B</td>
-                                        <td>A/B/C</td>
-                                        <td>B/C/D</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="matrix-legend glass-inner">
-                            <p><small>💡 Table shows ASIL for C1/C2/C3 controllability levels respectively</small></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Legend Section -->
-        <section class="legend-section" id="legend-section" style="display: none;">
-            <div class="card glass-panel">
-                <div class="card__body">
-                    <h3 class="section-title">🏆 ASIL Levels Reference</h3>
-                    <div class="legend-grid">
-                        <div class="legend-item glass-inner">
-                            <span class="legend-badge legend-qm">QM</span>
-                            <span>Quality Management - No ISO 26262 safety requirements</span>
-                        </div>
-                        <div class="legend-item glass-inner">
-                            <span class="legend-badge legend-a">A</span>
-                            <span>ASIL A - Basic safety integrity requirements</span>
-                        </div>
-                        <div class="legend-item glass-inner">
-                            <span class="legend-badge legend-b">B</span>
-                            <span>ASIL B - Medium safety integrity requirements</span>
-                        </div>
-                        <div class="legend-item glass-inner">
-                            <span class="legend-badge legend-c">C</span>
-                            <span>ASIL C - High safety integrity requirements</span>
-                        </div>
-                        <div class="legend-item glass-inner">
-                            <span class="legend-badge legend-d">D</span>
-                            <span>ASIL D - Highest safety integrity requirements</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        </div>
     </div>
 
-    <script src="app.js"></script>
-</body>
-</html>
+    <script src="./app.js"></script>
+    <!-- Anime.js Animation Library -->
+    <script src="https://cdn.jsdelivr.net/npm/animejs@4.0.0/lib/anime.min.js"></script>
+    <!-- Custom Animations -->
+    <script src="./animations.js"></script>
+
+</body></html>
