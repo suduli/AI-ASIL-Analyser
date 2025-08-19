@@ -176,7 +176,10 @@ class ASILCalculator {
     constructor() {
         this.settings = {
             provider: 'openai',
-            apiKey: ''
+            apiKey: '',
+            useOpenRouter: false,
+            openRouterModel: 'openai/gpt-oss-20b:free',
+            anthropicModel: 'claude-3-sonnet-20240229'
         };
         
         this.isKeyValid = false;
@@ -196,7 +199,31 @@ class ASILCalculator {
         this.updateDashboard();
         this.populateComponentSelect();
         this.populateComponentsTable();
+        this.setupProviderUI();
         console.log('ASIL Calculator v16 initialized successfully');
+    }
+
+    setupProviderUI() {
+        const providerSelect = document.getElementById('providerSelect');
+        const openRouterModelSelect = document.getElementById('openRouterModelSelect');
+        
+        if (providerSelect && openRouterModelSelect) {
+            // Initially hide/show OpenRouter model select based on current provider
+            openRouterModelSelect.parentElement.style.display = 
+                this.settings.provider === 'openrouter' ? 'block' : 'none';
+
+            // Add test event listener for provider changes
+            providerSelect.addEventListener('change', () => {
+                const isOpenRouter = providerSelect.value === 'openrouter';
+                openRouterModelSelect.parentElement.style.display = isOpenRouter ? 'block' : 'none';
+                
+                // For testing: Log provider change
+                console.log('Provider changed to:', providerSelect.value);
+                if (isOpenRouter) {
+                    console.log('OpenRouter model:', openRouterModelSelect.value);
+                }
+            });
+        }
     }
 
     initializeElements() {
@@ -204,6 +231,8 @@ class ASILCalculator {
         this.settingsBtn = document.getElementById('settingsBtn');
         this.databaseBtn = document.getElementById('databaseBtn');
         this.asilGuideBtn = document.getElementById('asilGuideBtn');
+        this.providerSelect = document.getElementById('providerSelect');
+        this.openRouterModelSelect = document.getElementById('openRouterModelSelect');
 
         // Modal elements
         this.settingsModal = document.getElementById('settingsModal');
@@ -256,7 +285,8 @@ class ASILCalculator {
         // Result display elements
         this.componentName = document.getElementById('componentName');
         this.componentCategory = document.getElementById('componentCategory');
-        this.featureDescription = document.getElementById('featureDescription');
+    // The About panel uses a class-based paragraph; prefer that, fall back to id for backward compatibility
+    this.featureDescription = document.querySelector('.about-feature-description') || document.getElementById('featureDescription');
         this.hazardsList = document.getElementById('hazardsList');
         this.failureList = document.getElementById('failureList');
         this.recommendationsList = document.getElementById('recommendationsList');
@@ -292,6 +322,64 @@ class ASILCalculator {
     }
 
     attachEventListeners() {
+        // Provider and model selection handling
+        if (this.providerSelect && this.openRouterModelSelect) {
+            // Initially hide OpenRouter model select if OpenRouter is not selected
+            this.openRouterModelSelect.parentElement.style.display = 
+                this.providerSelect.value === 'openrouter' ? 'block' : 'none';
+
+            // Show/hide OpenRouter model select based on provider selection
+            this.providerSelect.addEventListener('change', () => {
+                this.openRouterModelSelect.parentElement.style.display = 
+                    this.providerSelect.value === 'openrouter' ? 'block' : 'none';
+            });
+        }
+
+        // Update About panel live from main textarea input with AI
+        if (this.componentInput && this.featureDescription) {
+            let descriptionTimer;
+            this.componentInput.addEventListener('input', async (e) => {
+                const value = e.target.value.trim();
+                clearTimeout(descriptionTimer);
+                
+                if (!value) {
+                    this.featureDescription.textContent = '';
+                    return;
+                }
+
+                // Show loading state
+                this.featureDescription.textContent = 'Waiting for analysis...';
+                this.featureDescription.classList.add('loading');
+                this.featureDescription.classList.remove('about-update-highlight');
+                
+                // Debounce for 1 second to avoid excessive API calls
+                descriptionTimer = setTimeout(async () => {
+                    try {
+                        const response = await this.generateAIDescription(value, 'short');
+                        
+                        if (response) {
+                            this.featureDescription.textContent = response.trim();
+                            // Visual feedback for update
+                            this.featureDescription.classList.add('about-update-highlight');
+                            setTimeout(() => {
+                                this.featureDescription.classList.remove('about-update-highlight');
+                            }, 2000);
+                        }
+                    } catch (error) {
+                        console.error('Error generating AI description:', error);
+                        if (error.message.includes('API key')) {
+                            this.featureDescription.textContent = 'Please configure your API key in Settings to enable AI-powered descriptions.';
+                        } else {
+                            // THIS IS WHERE THE ERROR MESSAGE IS SET
+                            this.featureDescription.textContent = 'Unable to generate description. Please check your network connection and try again.';
+                        }
+                    } finally {
+                        this.featureDescription.classList.remove('loading');
+                    }
+                }, 1000);
+            });
+        }
+
         // FIXED: Header button events with direct event handlers
         if (this.settingsBtn) {
             this.settingsBtn.onclick = (e) => {
@@ -415,6 +503,28 @@ class ASILCalculator {
             }
         });
 
+        // Live update of About panel from component input with debouncing
+        let debounceTimer;
+        document.getElementById('componentInput').addEventListener('input', (e) => {
+            const description = e.target.value.trim();
+            clearTimeout(debounceTimer);
+            
+            // Clear description if input is empty
+            if (!description) {
+                if (this.featureDescription) {
+                    this.featureDescription.textContent = '';
+                }
+                return;
+            }
+
+            // Show loading state
+            if (this.featureDescription) {
+                this.featureDescription.textContent = 'Waiting for analysis...';
+                this.featureDescription.classList.add('loading');
+                this.featureDescription.classList.remove('about-update-highlight');
+            }
+        });
+        
         console.log('All event listeners attached successfully');
     }
 
@@ -427,7 +537,7 @@ class ASILCalculator {
         ];
 
         modalCloseMappings.forEach(({ btn, modal }) => {
-            if (btn) {
+            if (btn) {  // This check is redundant as the elements must exist
                 btn.onclick = (e) => {
                     e.preventDefault();
                     console.log(`Closing ${modal} modal`);
@@ -525,11 +635,29 @@ class ASILCalculator {
     }
 
     updateProvider() {
-        this.settings.provider = this.providerSelect.value;
+        const newProvider = this.providerSelect.value;
+        this.settings.provider = newProvider;
+        this.settings.useOpenRouter = newProvider === 'openrouter';
+        
+        // Update model if OpenRouter is selected
+        if (this.settings.useOpenRouter) {
+            const openRouterModelSelect = document.getElementById('openRouterModelSelect');
+            if (openRouterModelSelect) {
+                this.settings.openRouterModel = openRouterModelSelect.value;
+            }
+        }
+
         this.isKeyValid = false;
         this.updateSaveButtonState();
         this.clearKeyStatus();
         this.updateDashboard();
+        
+        // For testing: Log provider update
+        console.log('Provider updated:', {
+            provider: this.settings.provider,
+            useOpenRouter: this.settings.useOpenRouter,
+            model: this.settings.openRouterModel
+        });
     }
 
     clearKeyStatus() {
@@ -553,6 +681,9 @@ class ASILCalculator {
             return;
         }
 
+        // For testing: Log key validation attempt
+        console.log('Testing API key for provider:', this.settings.provider);
+        
         this.showKeyStatus('Testing API key...', 'testing');
         if (this.testKeyBtn) this.testKeyBtn.disabled = true;
 
@@ -576,19 +707,29 @@ class ASILCalculator {
 
     async validateApiKey(apiKey, provider) {
         // Handle demo keys
-        if (apiKey === 'demo-openai-key' || apiKey === 'demo-anthropic-key') {
+        if (apiKey === 'demo-openai-key' || apiKey === 'demo-anthropic-key' || apiKey === 'demo-openrouter-key') {
             return true;
         }
 
         try {
             let url, headers;
             
-            if (provider === 'openai') {
+            // Check if it's an OpenRouter key
+            if (apiKey.startsWith('sk-or-')) {
+                url = 'https://openrouter.ai/api/v1/auth/key';
+                headers = {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': window.location.href, // Required by OpenRouter
+                    'X-Title': 'ASIL Calculator' // Application name
+                };
+                this.settings.useOpenRouter = true;
+            } else if (provider === 'openai') {
                 url = 'https://api.openai.com/v1/models';
                 headers = {
                     'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 };
+                this.settings.useOpenRouter = false;
             } else if (provider === 'anthropic') {
                 url = 'https://api.anthropic.com/v1/models';
                 headers = {
@@ -596,6 +737,7 @@ class ASILCalculator {
                     'Content-Type': 'application/json',
                     'anthropic-version': '2023-06-01'
                 };
+                this.settings.useOpenRouter = false;
             } else {
                 throw new Error('Unsupported provider');
             }
@@ -664,6 +806,56 @@ class ASILCalculator {
         });
         
         console.log('Component select populated with', Object.keys(this.componentsDB).length, 'components');
+    }
+    async updateAboutFeature(componentKey) {
+        const aboutEl = document.querySelector('.about-feature-description');
+        if (!aboutEl) return componentKey;
+
+        if (!componentKey) {
+            aboutEl.textContent = '';
+            return componentKey;
+        }
+
+        const db = this.componentsDB || COMPONENTS_DB;
+        const component = db[componentKey];
+        
+        if (!component) {
+            aboutEl.textContent = '';
+            return componentKey;
+        }
+
+        aboutEl.textContent = 'Analyzing component features...';
+        aboutEl.classList.add('loading');
+        
+        try {
+            // Create a rich context for AI analysis
+            const componentContext = `
+Name: ${component.name}
+Category: ${component.category}
+Description: ${component.description}
+Hazards: ${component.potential_hazards.join(', ')}
+            `.trim();
+
+            // Use the new AI description generator
+            const response = await this.generateAIDescription(componentContext, 'short');
+            
+            if (response) {
+                aboutEl.textContent = response.trim();
+                aboutEl.classList.add('about-update-highlight');
+                setTimeout(() => aboutEl.classList.remove('about-update-highlight'), 2000);
+            }
+        } catch (error) {
+            console.error('Error generating AI description for component:', error);
+            if (error.message.includes('API key')) {
+                aboutEl.textContent = `Please configure your API key in Settings to enable AI-powered feature descriptions.`;
+            } else {
+                aboutEl.textContent = `${component.name} - Unable to generate AI description. Please check your connection and try again.`;
+            }
+        } finally {
+            aboutEl.classList.remove('loading');
+        }
+        
+        return componentKey;
     }
 
     populateComponentsTable() {
@@ -840,14 +1032,18 @@ class ASILCalculator {
     handleComponentSelection() {
         const selectedKey = this.componentSelect ? this.componentSelect.value : '';
         if (!selectedKey) return;
-        
+
+        // Update About panel content (shows DB info while AI generates a 2-3 line description on analysis)
+        this.updateAboutFeature(selectedKey);
+
         const component = this.componentsDB[selectedKey];
         console.log('Component selected:', component.name);
-        
+
         // Update component details immediately
         if (this.componentName) this.componentName.textContent = component.name;
         if (this.componentCategory) this.componentCategory.textContent = component.category;
-        if (this.featureDescription) this.featureDescription.textContent = component.description;
+
+        // Do not overwrite the About panel here with raw DB description; AI will produce the short 2-3 line summary on analyze
     }
 
     async analyzeComponent() {
@@ -856,6 +1052,7 @@ class ASILCalculator {
         const inputMethod = document.querySelector('input[name="inputMethod"]:checked');
         const method = inputMethod ? inputMethod.value : 'manual';
         let component, selectedComponent = null;
+        const selectedKey = this.componentSelect ? this.componentSelect.value : '';
         
         if (method === 'manual') {
             component = this.componentInput ? this.componentInput.value.trim() : '';
@@ -863,14 +1060,40 @@ class ASILCalculator {
                 alert('Please describe a component to analyze.');
                 return;
             }
+            
+            // Generate AI description for manual input immediately
+            try {
+                const descriptionPrompt = `As an automotive expert, provide a concise 3-line technical description focusing on:
+1. Primary purpose and role
+2. Integration with other systems 
+3. Safety implications
+
+Component: "${component}"
+
+Format: Return exactly 3 lines, one point per line.`;
+
+                const description = await this.callAI(descriptionPrompt);
+                if (this.featureDescription) {
+                    this.featureDescription.textContent = description;
+                    this.featureDescription.classList.add('about-update-highlight');
+                    setTimeout(() => {
+                        this.featureDescription.classList.remove('about-update-highlight');
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error generating description:', error);
+                if (this.featureDescription) {
+                    this.featureDescription.textContent = 'Unable to generate description. Please check API configuration and try again.';
+                }
+            }
         } else {
-            const selectedKey = this.componentSelect ? this.componentSelect.value : '';
+            // Use selected component from database; performASILAnalysis will request an AI summary
             if (!selectedKey) {
                 alert('Please select a component from the database.');
                 return;
             }
             selectedComponent = this.componentsDB[selectedKey];
-            component = selectedComponent.description;
+            component = selectedComponent.name;
         }
 
         // For database components, we can analyze without API key
@@ -901,7 +1124,7 @@ class ASILCalculator {
             
             // Step 3: Display comprehensive results
             console.log('Displaying results...');
-            this.displayComprehensiveResults(analysis, selectedComponent, method);
+            this.displayComprehensiveResults(analysis, selectedComponent);
             
             // Update analysis count
             this.analysesCount++;
@@ -947,6 +1170,28 @@ class ASILCalculator {
         const manualS = this.severitySelect ? this.severitySelect.value : '';
         const manualE = this.exposureSelect ? this.exposureSelect.value : '';
         const manualC = this.controllabilitySelect ? this.controllabilitySelect.value : '';
+
+        // Always generate a short AI description (2-3 lines) for the About panel
+        try {
+            const targetName = selectedComponent ? selectedComponent.name : component;
+            const descriptionPrompt = `As an automotive expert, provide a 3-4 line technical description of this component: "${targetName}"`;
+            const aiDescription = await this.callAI(descriptionPrompt);
+            if (this.featureDescription) {
+                this.featureDescription.textContent = aiDescription;
+                // debug: add temporary highlight and console log to help verify updates
+                try {
+                    this.featureDescription.classList.add('about-update-highlight');
+                    console.log('AI description applied to About panel:', aiDescription);
+                    setTimeout(() => {
+                        this.featureDescription.classList.remove('about-update-highlight');
+                    }, 2000);
+                } catch (e) {
+                    // ignore DOM errors in older browsers
+                }
+            }
+        } catch (error) {
+            console.error('Error generating short AI description:', error);
+        }
 
         let analysis;
 
@@ -1070,93 +1315,109 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
     }
 
     async callAI(prompt) {
-        // For demo keys, use simulation
-        if (this.settings.apiKey === 'demo-openai-key' || this.settings.apiKey === 'demo-anthropic-key') {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            return this.simulateAIResponse(prompt);
+        // Validate API key and configuration
+        if (!this.settings.apiKey || this.settings.apiKey === '') {
+            throw new Error('Please configure your API key in Settings first.');
+        }
+        
+        if (!this.isKeyValid && !this.settings.apiKey.startsWith('demo-')) {
+            throw new Error('Please validate your API key in Settings first.');
         }
 
-        // Real API calls
-        let url, headers, body;
+        try {
+            let url, headers, body;
+            
+            if (this.settings.useOpenRouter || this.settings.apiKey.startsWith('sk-or-')) {
+                url = 'https://openrouter.ai/api/v1/chat/completions';
+                headers = {
+                    'Authorization': `Bearer ${this.settings.apiKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.href || 'https://localhost',
+                    'X-Title': 'ASIL Calculator'
+                };
+                body = {
+                    model: "openai/gpt-oss-20b:free",
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 1000,
+                    temperature: 0.1
+                };
+            } else if (this.settings.provider === 'openai') {
+                // Fixed OpenAI request format
+                url = 'https://api.openai.com/v1/chat/completions';
+                headers = {
+                    'Authorization': `Bearer ${this.settings.apiKey}`,
+                    'Content-Type': 'application/json'
+                };
+                body = {
+                    model: 'gpt-3.5-turbo', // Using the latest model
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 1000,
+                    temperature: 0.1,
+                    stream: false
+                };
+            } else if (this.settings.provider === 'anthropic') {
+                url = 'https://api.anthropic.com/v1/messages';
+                headers = {
+                    'x-api-key': this.settings.apiKey,
+                    'Content-Type': 'application/json',
+                    'anthropic-version': '2024-01-01'
+                };
+                body = JSON.stringify({
+                    model: this.settings.anthropicModel,
+                    max_tokens: 1000,
+                    messages: [{ role: 'user', content: prompt }]
+                });
+            }
 
-        if (this.settings.provider === 'openai') {
-            url = 'https://api.openai.com/v1/chat/completions';
-            headers = {
-                'Authorization': `Bearer ${this.settings.apiKey}`,
-                'Content-Type': 'application/json'
-            };
-            body = JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: prompt }],
-                max_tokens: 1000,
-                temperature: 0.1
+            console.log('Making API call with:', { 
+                url, 
+                headers,
+                body: { ...body, apiKey: '***' } 
             });
-        } else if (this.settings.provider === 'anthropic') {
-            url = 'https://api.anthropic.com/v1/messages';
-            headers = {
-                'x-api-key': this.settings.apiKey,
-                'Content-Type': 'application/json',
-                'anthropic-version': '2023-06-01'
-            };
-            body = JSON.stringify({
-                model: 'claude-3-haiku-20240307',
-                max_tokens: 1000,
-                messages: [{ role: 'user', content: prompt }]
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body)
             });
-        }
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: headers,
-            body: body
-        });
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(`API request failed: ${errorData.error?.message || response.statusText}`);
+                } catch (e) {
+                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                }
+            }
 
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-        }
+            const data = await response.json();
+            console.log('API Response:', {
+                ...data,
+                apiKey: '***'
+            });
 
-        const data = await response.json();
-        
-        if (this.settings.provider === 'openai') {
-            return data.choices[0].message.content;
-        } else if (this.settings.provider === 'anthropic') {
-            return data.content[0].text;
-        }
-    }
+            // Extract content based on provider
+            let content;
+            if (this.settings.useOpenRouter || this.settings.apiKey.startsWith('sk-or-')) {
+                content = data.choices[0].message.content;
+            } else if (this.settings.provider === 'openai') {
+                content = data.choices[0].message.content;
+            } else if (this.settings.provider === 'anthropic') {
+                content = data.content[0].text;
+            }
 
-    simulateAIResponse(prompt) {
-        if (prompt.includes('automobile or vehicle')) {
-            const component = prompt.split('"')[1].toLowerCase();
-            const automotiveKeywords = ['brake', 'engine', 'steering', 'airbag', 'transmission', 'suspension', 'abs', 'esp', 'ecu', 'control', 'sensor', 'wheel', 'motor'];
-            const hasAutomotive = automotiveKeywords.some(keyword => component.includes(keyword));
-            return hasAutomotive ? 'YES' : 'NO';
+            if (!content) {
+                throw new Error('No content in API response');
+            }
+
+            return content;
+            
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
         }
-        
-        if (prompt.includes('ISO 26262')) {
-            return `SEVERITY: S2
-SEVERITY_DESC: Severe to life-threatening injuries - Component failure could result in significant harm to vehicle occupants or other road users
-EXPOSURE: E3  
-EXPOSURE_DESC: High probability - Component is frequently used during normal vehicle operation in various driving conditions
-CONTROLLABILITY: C2
-CONTROLLABILITY_DESC: Normally controllable - Most drivers would be able to control the situation or avoid harm through appropriate response
-HAZARDS: Loss of primary function
-HAZARDS: Incorrect or unexpected behavior
-HAZARDS: Interference with other vehicle systems
-HAZARDS: Environmental degradation
-HAZARDS: Cyber security vulnerabilities
-FAILURES: Component hardware failure
-FAILURES: Software errors or glitches
-FAILURES: Loss of power or data connection
-FAILURES: Sensor malfunction
-FAILURES: Communication interference
-RECOMMENDATIONS: Incorporate fail-safe mechanisms
-RECOMMENDATIONS: Ensure robust error handling in software
-RECOMMENDATIONS: Follow standard QA and testing protocols
-RECOMMENDATIONS: Implement redundant systems
-RECOMMENDATIONS: Regular maintenance and updates`;
-        }
-        
-        return 'Analysis completed using simulation mode';
     }
 
     fallbackASILAnalysis(component) {
@@ -1274,17 +1535,17 @@ RECOMMENDATIONS: Regular maintenance and updates`;
         return explanations[asil] || 'ASIL determination pending';
     }
 
-    displayComprehensiveResults(analysis, selectedComponent, inputMethod) {
+    async displayComprehensiveResults(analysis, selectedComponent) {
         // Feature Details
         if (selectedComponent) {
             if (this.componentName) this.componentName.textContent = selectedComponent.name;
             if (this.componentCategory) this.componentCategory.textContent = selectedComponent.category;
-            if (this.featureDescription) this.featureDescription.textContent = selectedComponent.description;
+            // Feature description for database components is handled in handleComponentSelection
         } else {
             const componentText = this.componentInput ? this.componentInput.value.trim() : 'Manual Input';
             if (this.componentName) this.componentName.textContent = componentText.substring(0, 50) + (componentText.length > 50 ? '...' : '');
             if (this.componentCategory) this.componentCategory.textContent = 'Manual Analysis';
-            if (this.featureDescription) this.featureDescription.textContent = componentText;
+            // Note: featureDescription for manual input is handled in performASILAnalysis
         }
 
         // S/E/C Analysis Results
@@ -1372,7 +1633,7 @@ RECOMMENDATIONS: Regular maintenance and updates`;
         const dbAsil = selectedComponent.asil;
 
         if (this.aiSeverity) this.aiSeverity.textContent = analysis.severity.level;
-        if (this.dbSeverity) this.dbSeverity.textContent = dbSeverity;
+               if (this.dbSeverity) this.dbSeverity.textContent = dbSeverity;
         if (this.severityMatch) {
             const match = analysis.severity.level === dbSeverity;
             this.severityMatch.textContent = match ? '✓ Match' : '✗ Differ';
