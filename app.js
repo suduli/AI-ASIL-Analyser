@@ -159,7 +159,7 @@ const COMPONENTS_DB = {
         S: 3, E: 1, C: 3, asil: 'C',
         reasons: { S: 'Improper deployment can be fatal (S3)', E: 'Crashes are rare (E1)', C: 'No driver control over deployment (C3)' }
     },
-    'electronic_stability_control': {
+    'electronic_Stability_control': {
         name: 'Electronic Stability Control',
         category: 'Safety',
         description: 'System that helps maintain vehicle stability by detecting and reducing loss of traction through selective brake application.',
