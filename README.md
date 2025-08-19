@@ -138,7 +138,6 @@ AI-ASIL-Analyser/
 - **Model**: `claude-3-opus-20240229`
 - **Strengths**: Detailed safety analysis, ISO standard compliance
 - **API Key Format**: `sk-ant-...`
-- 
 ### openrouter.com
 - **Model**: `openai/gpt-oss-20b:free`
 - **Strengths**: Detailed safety analysis, ISO standard compliance
