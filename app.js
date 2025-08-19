@@ -1262,11 +1262,14 @@ Format: Return exactly 3 lines, one point per line.`;
             console.error('Error generating short AI description:', error);
         }
 
-        let analysis;
+        // Create two separate analysis objects: one for database (if available) and one for AI
+        let dbAnalysis = null;
+        let aiAnalysis = null;
 
+        // If we have a database component, create the database analysis object
         if (selectedComponent) {
-            // Use database values with manual overrides
-            analysis = {
+            // Create database analysis with manual overrides
+            dbAnalysis = {
                 severity: {
                     level: manualS ? `S${manualS}` : `S${selectedComponent.S}`,
                     description: selectedComponent.reasons.S || this.getSeverityDescription(manualS ? `S${manualS}` : `S${selectedComponent.S}`)
@@ -1283,9 +1286,16 @@ Format: Return exactly 3 lines, one point per line.`;
                 failures: selectedComponent.failure_modes,
                 recommendations: selectedComponent.safety_recommendations
             };
-        } else {
-            // AI-based analysis for manual input
-            const prompt = `As an ISO 26262 functional safety expert, analyze this automotive component: "${component}"
+        }
+
+        // For both database and manual components, attempt an AI analysis
+        // This ensures we have a true AI vs Database comparison
+        try {
+            // Use the component name for database items, or the full description for manual input
+            const targetName = selectedComponent ? selectedComponent.name : component;
+            
+            // AI-based analysis for both database and manual input
+            const prompt = `As an ISO 26262 functional safety expert, analyze this automotive component: "${targetName}"
 
 Provide detailed analysis in this exact format:
 SEVERITY: [S0-S3]
@@ -1293,35 +1303,54 @@ SEVERITY_DESC: [detailed explanation]
 EXPOSURE: [E0-E4]
 EXPOSURE_DESC: [detailed explanation]  
 CONTROLLABILITY: [C0-C3]
-CONTROLLABILITY_DESC: [detailed explanation]
-HAZARDS: [list 3-5 potential hazards]
-FAILURES: [list 3-5 failure modes]
+CONTROLLABILITY_DESC: [detailed explanation,without numbers]
+HAZARDS: [list 3-5 potential hazards,without numbers]
+FAILURES: [list 3-5 failure modes,without numbers]
 RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
 
-            try {
-                const response = await this.callAI(prompt);
-                analysis = this.parseDetailedAnalysis(response);
-            } catch (error) {
-                console.error('AI analysis error:', error);
-                analysis = this.fallbackASILAnalysis(component);
-            }
-
-            // Apply manual overrides
+            const response = await this.callAI(prompt);
+            aiAnalysis = this.parseDetailedAnalysis(response);
+            
+            // Apply manual overrides to AI analysis if specified
             if (manualS) {
-                analysis.severity.level = `S${manualS}`;
-                analysis.severity.description = this.getSeverityDescription(`S${manualS}`);
+                aiAnalysis.severity.level = `S${manualS}`;
+                aiAnalysis.severity.description = this.getSeverityDescription(`S${manualS}`);
             }
             if (manualE) {
-                analysis.exposure.level = `E${manualE}`;
-                analysis.exposure.description = this.getExposureDescription(`E${manualE}`);
+                aiAnalysis.exposure.level = `E${manualE}`;
+                aiAnalysis.exposure.description = this.getExposureDescription(`E${manualE}`);
             }
             if (manualC) {
-                analysis.controllability.level = `C${manualC}`;
-                analysis.controllability.description = this.getControllabilityDescription(`C${manualC}`);
+                aiAnalysis.controllability.level = `C${manualC}`;
+                aiAnalysis.controllability.description = this.getControllabilityDescription(`C${manualC}`);
+            }
+        } catch (error) {
+            console.error('AI analysis error:', error);
+            aiAnalysis = this.fallbackASILAnalysis(selectedComponent ? selectedComponent.name : component);
+            
+            // Apply manual overrides to fallback analysis if specified
+            if (manualS) {
+                aiAnalysis.severity.level = `S${manualS}`;
+                aiAnalysis.severity.description = this.getSeverityDescription(`S${manualS}`);
+            }
+            if (manualE) {
+                aiAnalysis.exposure.level = `E${manualE}`;
+                aiAnalysis.exposure.description = this.getExposureDescription(`E${manualE}`);
+            }
+            if (manualC) {
+                aiAnalysis.controllability.level = `C${manualC}`;
+                aiAnalysis.controllability.description = this.getControllabilityDescription(`C${manualC}`);
             }
         }
 
-        return analysis;
+        // Return the appropriate analysis object based on context
+        // For display purposes, we prioritize the database analysis for the main display,
+        // but we'll pass both analyses to the comparison display function
+        return {
+            displayAnalysis: dbAnalysis || aiAnalysis, // For main display, prioritize DB if available
+            dbAnalysis: dbAnalysis,                   // Database analysis (or null if none)
+            aiAnalysis: aiAnalysis                    // AI analysis (should always be available)
+        };
     }
 
     parseDetailedAnalysis(response) {
@@ -1785,7 +1814,13 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
         return explanations[asil] || 'ASIL determination pending';
     }
 
-    async displayComprehensiveResults(analysis, selectedComponent) {
+    async displayComprehensiveResults(analysisResult, selectedComponent) {
+        // Extract the appropriate analysis objects from the result
+        const { displayAnalysis, dbAnalysis, aiAnalysis } = analysisResult;
+        
+        // Use displayAnalysis (which is either dbAnalysis or aiAnalysis) for main display
+        const analysis = displayAnalysis;
+        
         // Store current analysis results for save functionality
         this.currentAnalysis = {
             analysis: analysis,
@@ -1835,8 +1870,8 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
         this.displayListSection(this.failureList, analysis.failures || ['Analysis completed successfully']);
         this.displayListSection(this.recommendationsList, analysis.recommendations || ['Analysis completed successfully']);
 
-        // AI vs Database Comparison
-        this.displayComparison(analysis, selectedComponent, asil);
+        // AI vs Database Comparison - use the separate aiAnalysis and dbAnalysis objects
+        this.displayComparison(aiAnalysis, dbAnalysis);
 
         // Show results
         if (this.resultsSection) {
@@ -1862,61 +1897,75 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
         });
     }
 
-    displayComparison(analysis, selectedComponent, aiAsil) {
-        if (!selectedComponent) {
+    displayComparison(aiAnalysis, dbAnalysis) {
+        if (!dbAnalysis) {
             // No database comparison for manual input
-            if (this.aiSeverity) this.aiSeverity.textContent = analysis.severity.level;
+            if (this.aiSeverity) this.aiSeverity.textContent = aiAnalysis.severity.level;
             if (this.dbSeverity) this.dbSeverity.textContent = 'N/A';
             if (this.severityMatch) this.severityMatch.textContent = 'N/A';
             
-            if (this.aiExposure) this.aiExposure.textContent = analysis.exposure.level;
+            if (this.aiExposure) this.aiExposure.textContent = aiAnalysis.exposure.level;
             if (this.dbExposure) this.dbExposure.textContent = 'N/A';
             if (this.exposureMatch) this.exposureMatch.textContent = 'N/A';
             
-            if (this.aiControllability) this.aiControllability.textContent = analysis.controllability.level;
+            if (this.aiControllability) this.aiControllability.textContent = aiAnalysis.controllability.level;
             if (this.dbControllability) this.dbControllability.textContent = 'N/A';
             if (this.controllabilityMatch) this.controllabilityMatch.textContent = 'N/A';
             
-            if (this.aiAsil) this.aiAsil.textContent = aiAsil;
+            const aiAsilValue = this.calculateASIL(
+                aiAnalysis.severity.level,
+                aiAnalysis.exposure.level,
+                aiAnalysis.controllability.level
+            );
+            
+            if (this.aiAsil) this.aiAsil.textContent = aiAsilValue;
             if (this.dbAsil) this.dbAsil.textContent = 'N/A';
             if (this.asilMatch) this.asilMatch.textContent = 'N/A';
             return;
         }
 
-        // Database comparison
-        const dbSeverity = `S${selectedComponent.S}`;
-        const dbExposure = `E${selectedComponent.E}`;
-        const dbControllability = `C${selectedComponent.C}`;
-        const dbAsil = selectedComponent.asil;
+        // Calculate ASIL values for comparison
+        const aiAsilValue = this.calculateASIL(
+            aiAnalysis.severity.level,
+            aiAnalysis.exposure.level,
+            aiAnalysis.controllability.level
+        );
+        
+        const dbAsilValue = this.calculateASIL(
+            dbAnalysis.severity.level,
+            dbAnalysis.exposure.level,
+            dbAnalysis.controllability.level
+        );
 
-        if (this.aiSeverity) this.aiSeverity.textContent = analysis.severity.level;
-               if (this.dbSeverity) this.dbSeverity.textContent = dbSeverity;
+        // Display comparisons
+        if (this.aiSeverity) this.aiSeverity.textContent = aiAnalysis.severity.level;
+        if (this.dbSeverity) this.dbSeverity.textContent = dbAnalysis.severity.level;
         if (this.severityMatch) {
-            const match = analysis.severity.level === dbSeverity;
+            const match = aiAnalysis.severity.level === dbAnalysis.severity.level;
             this.severityMatch.textContent = match ? '✓ Match' : '✗ Differ';
             this.severityMatch.className = match ? 'match-yes' : 'match-no';
         }
         
-        if (this.aiExposure) this.aiExposure.textContent = analysis.exposure.level;
-        if (this.dbExposure) this.dbExposure.textContent = dbExposure;
+        if (this.aiExposure) this.aiExposure.textContent = aiAnalysis.exposure.level;
+        if (this.dbExposure) this.dbExposure.textContent = dbAnalysis.exposure.level;
         if (this.exposureMatch) {
-            const match = analysis.exposure.level === dbExposure;
+            const match = aiAnalysis.exposure.level === dbAnalysis.exposure.level;
             this.exposureMatch.textContent = match ? '✓ Match' : '✗ Differ';
             this.exposureMatch.className = match ? 'match-yes' : 'match-no';
         }
         
-        if (this.aiControllability) this.aiControllability.textContent = analysis.controllability.level;
-        if (this.dbControllability) this.dbControllability.textContent = dbControllability;
+        if (this.aiControllability) this.aiControllability.textContent = aiAnalysis.controllability.level;
+        if (this.dbControllability) this.dbControllability.textContent = dbAnalysis.controllability.level;
         if (this.controllabilityMatch) {
-            const match = analysis.controllability.level === dbControllability;
+            const match = aiAnalysis.controllability.level === dbAnalysis.controllability.level;
             this.controllabilityMatch.textContent = match ? '✓ Match' : '✗ Differ';
             this.controllabilityMatch.className = match ? 'match-yes' : 'match-no';
         }
         
-        if (this.aiAsil) this.aiAsil.textContent = aiAsil;
-        if (this.dbAsil) this.dbAsil.textContent = dbAsil;
+        if (this.aiAsil) this.aiAsil.textContent = aiAsilValue;
+        if (this.dbAsil) this.dbAsil.textContent = dbAsilValue;
         if (this.asilMatch) {
-            const match = aiAsil === dbAsil;
+            const match = aiAsilValue === dbAsilValue;
             this.asilMatch.textContent = match ? '✓ Match' : '✗ Differ';
             this.asilMatch.className = match ? 'match-yes' : 'match-no';
         }
@@ -2101,10 +2150,36 @@ function setupReducedMotionSupport() {
     });
 }
 
+// Function to remove any demo content that might be lingering
+function removeDemoContent() {
+    // Remove demo animations section if it exists
+    const demoSection = document.querySelector('.demo-animations-section');
+    if (demoSection) {
+        demoSection.remove();
+        console.log('Demo animations section removed');
+    }
+    
+    // Remove any elements with demo-related classes
+    const demoCards = document.querySelectorAll('.demo-card');
+    demoCards.forEach(card => card.remove());
+    
+    const demoGrids = document.querySelectorAll('.demo-cards-grid');
+    demoGrids.forEach(grid => grid.remove());
+    
+    // Remove any elements containing "Animation Showcase"
+    const showcaseElements = Array.from(document.querySelectorAll('*')).filter(el => 
+        el.textContent && el.textContent.includes('Animation Showcase')
+    );
+    showcaseElements.forEach(el => el.remove());
+    
+    console.log('Demo content cleanup complete');
+}
+
 // Initialize the application when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initializing ASIL Calculator v16...');
+        removeDemoContent(); // Remove any demo content first
         setupThemeToggle(); // Add theme toggle before calculator initialization
         setupReducedMotionSupport(); // Add reduced motion support
         window.asilCalculator = new ASILCalculator();
@@ -2112,6 +2187,7 @@ if (document.readyState === 'loading') {
     });
 } else {
     console.log('DOM ready - Initializing ASIL Calculator v16...');
+    removeDemoContent(); // Remove any demo content first
     setupThemeToggle(); // Add theme toggle before calculator initialization
     setupReducedMotionSupport(); // Add reduced motion support
     window.asilCalculator = new ASILCalculator();

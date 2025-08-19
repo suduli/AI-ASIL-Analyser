@@ -640,7 +640,29 @@ pre code {
   box-shadow: 
       inset 0 2px 4px rgba(0, 0, 0, 0.1),
       0 0 0 2px rgba(0, 150, 255, 0.2);
-  background: rgba(0, 20, 40, 0.4);
+  background-color: rgba(0, 20, 40, 0.4);
+}
+
+/* Ensure select dropdown arrows are preserved on focus */
+select.form-control:focus {
+  background-image: var(--select-caret-light);
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25em auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  select.form-control:focus {
+    background-image: var(--select-caret-dark);
+  }
+}
+
+[data-color-scheme="dark"] select.form-control:focus {
+  background-image: var(--select-caret-dark);
+}
+
+[data-color-scheme="light"] select.form-control:focus {
+  background-image: var(--select-caret-light);
 }
 
 textarea.form-control {
@@ -648,6 +670,11 @@ textarea.form-control {
   font-size: var(--font-size-base);
 }
 
+/* CSS Fix for single dropdown arrow on form controls:
+ * - Ensures consistent single chevron in custom selects
+ * - Prevents tiling or duplication of SVG background
+ * - Compatible with theme switching and cross-browser
+ */
 select.form-control {
   padding: var(--space-8) var(--space-12);
   -webkit-appearance: none;
@@ -655,9 +682,9 @@ select.form-control {
   appearance: none;
   background-image: var(--select-caret-light);
   background-repeat: no-repeat;
-  background-position: right var(--space-12) center;
-  background-size: 16px;
-  padding-right: var(--space-32);
+  background-position: right 1rem center;
+  background-size: 1.25em auto;
+  padding-right: 2.5em;
 }
 
 /* Add a dark mode specific caret */
@@ -674,11 +701,6 @@ select.form-control {
 
 [data-color-scheme="light"] select.form-control {
   background-image: var(--select-caret-light);
-}
-
-.form-control:focus {
-  border-color: var(--color-primary);
-  outline: var(--focus-outline);
 }
 
 .form-label {
@@ -1855,7 +1877,11 @@ select.form-control {
     background: rgba(0, 20, 40, 0.4);
 }
 
-/* Component Select */
+/* Component Select - CSS Fix for single dropdown arrow:
+ * - Ensures consistent single chevron in custom selects
+ * - Prevents tiling or duplication of SVG background
+ * - Compatible with theme switching and cross-browser
+ */
 .select-container {
     position: relative;
 }
@@ -1863,15 +1889,21 @@ select.form-control {
 .component-select {
     width: 100%;
     padding: var(--space-12) var(--space-16);
-    padding-right: var(--space-40);
     background: rgba(0, 20, 40, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-size: var(--font-size-md);
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     cursor: pointer;
     transition: all 0.3s ease;
+    background-image: var(--select-caret-light);
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25em auto;
+    padding-right: 2.5em;
 }
 
 .component-select:hover {
@@ -1883,25 +1915,28 @@ select.form-control {
     border-color: var(--color-primary);
     outline: none;
     box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
-    background: rgba(0, 20, 40, 0.4);
+    background-color: rgba(0, 20, 40, 0.4);
+    background-image: var(--select-caret-light);
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
 }
 
-.select-container::after {
-    content: '';
-    position: absolute;
-    right: var(--space-16);
-    top: 50%;
-    transform: translateY(-50%) rotate(45deg);
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid var(--color-text-secondary);
-    border-bottom: 2px solid var(--color-text-secondary);
-    pointer-events: none;
-    transition: all 0.3s ease;
+/* Dark mode for component selects */
+@media (prefers-color-scheme: dark) {
+  .component-select {
+    background-image: var(--select-caret-dark);
+  }
+  .component-select:focus {
+    background-image: var(--select-caret-dark);
+  }
 }
 
-.select-container:hover::after {
-    border-color: var(--color-text);
+[data-color-scheme="dark"] .component-select {
+  background-image: var(--select-caret-dark);
+}
+
+[data-color-scheme="light"] .component-select {
+  background-image: var(--select-caret-light);
 }
 
 /* Parameters Card */
@@ -1984,9 +2019,16 @@ select.form-control {
     border-radius: var(--radius-sm);
     color: var(--color-text);
     font-size: var(--font-size-sm);
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     cursor: pointer;
     transition: all 0.3s ease;
+    background-image: var(--select-caret-light);
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em auto;
+    padding-right: 2rem;
 }
 
 .parameter-select:hover {
@@ -1999,17 +2041,19 @@ select.form-control {
     box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
 }
 
-.parameter-control::after {
-    content: '';
-    position: absolute;
-    right: var(--space-12);
-    top: 50%;
-    transform: translateY(-50%) rotate(45deg);
-    width: 6px;
-    height: 6px;
-    border-right: 2px solid var(--color-text-secondary);
-    border-bottom: 2px solid var(--color-text-secondary);
-    pointer-events: none;
+/* Dark mode for parameter selects */
+@media (prefers-color-scheme: dark) {
+  .parameter-select {
+    background-image: var(--select-caret-dark);
+  }
+}
+
+[data-color-scheme="dark"] .parameter-select {
+  background-image: var(--select-caret-dark);
+}
+
+[data-color-scheme="light"] .parameter-select {
+  background-image: var(--select-caret-light);
 }
 
 /* Action Container */
@@ -2348,49 +2392,8 @@ select.form-control {
     position: relative;
 }
 
-.component-select {
-    width: 100%;
-    padding: var(--space-12) var(--space-16);
-    padding-right: var(--space-40);
-    background: rgba(0, 20, 40, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-base);
-    color: var(--color-text);
-    font-size: var(--font-size-md);
-    appearance: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.component-select:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-.component-select:focus {
-    border-color: var(--color-primary);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
-}
-
-.select-wrapper::after {
-    content: '';
-    position: absolute;
-    right: var(--space-16);
-    top: 50%;
-    transform: translateY(-50%);
-    width: 10px;
-    height: 10px;
-    border-right: 2px solid var(--color-text-secondary);
-    border-bottom: 2px solid var(--color-text-secondary);
-    transform: translateY(-50%) rotate(45deg);
-    pointer-events: none;
-    transition: all 0.3s ease;
-}
-
-.select-wrapper:hover::after {
-    border-color: var(--color-text);
-}
+/* Note: Main component-select styling is already defined earlier.
+   This redundant definition is removed to avoid conflicts. */
 
 .sec-adjustments {
     display: grid;
@@ -2411,7 +2414,55 @@ select.form-control {
 }
 
 .adjustment-select {
-    font-size: var(--font-size-sm);
+    width: 100%;
+    padding: var(--space-10) var(--space-12);
+    background-color: rgba(0, 20, 40, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-base);
+    color: var(--color-text);
+    font-size: var(--font-size-md);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-image: var(--select-caret-light);
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em auto;
+    padding-right: 2rem;
+}
+
+.adjustment-select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 20, 40, 0.5);
+}
+
+.adjustment-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.adjustment-select option {
+    background: var(--color-background);
+    color: var(--color-text);
+    padding: var(--space-8);
+}
+
+/* Dark mode for adjustment selects */
+@media (prefers-color-scheme: dark) {
+  .adjustment-select {
+    background-image: var(--select-caret-dark);
+  }
+}
+
+[data-color-scheme="dark"] .adjustment-select {
+  background-image: var(--select-caret-dark);
+}
+
+[data-color-scheme="light"] .adjustment-select {
+  background-image: var(--select-caret-light);
 }
 
 .analyze-btn-container {
@@ -3926,4 +3977,142 @@ select.form-control {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 50%;
     margin-right: 0.3rem;
+}
+
+/* Enhanced Badge Styles for Animation Demo */
+.new-badge {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+}
+
+.updated-badge {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(37, 99, 235, 0.8));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+.critical-badge {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.8));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.high-priority {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.important-info {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Demo Cards Specific Styles */
+.demo-cards-grid .demo-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.demo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.demo-card:hover::before {
+    opacity: 1;
+}
+
+/* Enhanced Card Styling */
+.analysis-card,
+.result-panel,
+.component-card,
+.summary-card,
+.info-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Flip Card Enhancement */
+.flip-back-content {
+    text-align: center;
+}
+
+.flip-back-content .detail-section {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.flip-back-content h5 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.flip-back-content ul {
+    text-align: left;
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.flip-back-content li {
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.flip-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(74, 144, 226, 0.1);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    opacity: 0.8;
 }
