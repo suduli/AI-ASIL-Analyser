@@ -188,6 +188,13 @@ class ASILCalculator {
         this.filteredComponents = Object.keys(this.componentsDB);
         this.currentEditKey = null;
         
+        // Debounce timers
+        this._aboutInputTimer = null;
+        this._aboutHighlightTimer = null;
+        
+        // Track current analysis results
+        this.currentAnalysis = null;
+        
         this.init();
     }
 
@@ -227,6 +234,10 @@ class ASILCalculator {
     }
 
     initializeElements() {
+        // Save ASIL button
+        this.saveToDbBtn = document.getElementById('saveToDbBtn');
+        this.saveStatus = document.getElementById('saveStatus');
+        
         // Header buttons
         this.settingsBtn = document.getElementById('settingsBtn');
         this.databaseBtn = document.getElementById('databaseBtn');
@@ -322,6 +333,14 @@ class ASILCalculator {
     }
 
     attachEventListeners() {
+        // Save ASIL to Database button
+        if (this.saveToDbBtn) {
+            this.saveToDbBtn.onclick = (e) => {
+                e.preventDefault();
+                this.saveCurrentAnalysisToDatabase();
+            };
+        }
+        
         // Provider and model selection handling
         if (this.providerSelect && this.openRouterModelSelect) {
             // Initially hide OpenRouter model select if OpenRouter is not selected
@@ -335,49 +354,9 @@ class ASILCalculator {
             });
         }
 
-        // Update About panel live from main textarea input with AI
+                // Set up the unified debounced About panel input handler
         if (this.componentInput && this.featureDescription) {
-            let descriptionTimer;
-            this.componentInput.addEventListener('input', async (e) => {
-                const value = e.target.value.trim();
-                clearTimeout(descriptionTimer);
-                
-                if (!value) {
-                    this.featureDescription.textContent = '';
-                    return;
-                }
-
-                // Show loading state
-                this.featureDescription.textContent = 'Waiting for analysis...';
-                this.featureDescription.classList.add('loading');
-                this.featureDescription.classList.remove('about-update-highlight');
-                
-                // Debounce for 1 second to avoid excessive API calls
-                descriptionTimer = setTimeout(async () => {
-                    try {
-                        const response = await this.generateAIDescription(value, 'short');
-                        
-                        if (response) {
-                            this.featureDescription.textContent = response.trim();
-                            // Visual feedback for update
-                            this.featureDescription.classList.add('about-update-highlight');
-                            setTimeout(() => {
-                                this.featureDescription.classList.remove('about-update-highlight');
-                            }, 2000);
-                        }
-                    } catch (error) {
-                        console.error('Error generating AI description:', error);
-                        if (error.message.includes('API key')) {
-                            this.featureDescription.textContent = 'Please configure your API key in Settings to enable AI-powered descriptions.';
-                        } else {
-                            // THIS IS WHERE THE ERROR MESSAGE IS SET
-                            this.featureDescription.textContent = 'Unable to generate description. Please check your network connection and try again.';
-                        }
-                    } finally {
-                        this.featureDescription.classList.remove('loading');
-                    }
-                }, 1000);
-            });
+            this.setupDebouncedAboutInputHandler();
         }
 
         // FIXED: Header button events with direct event handlers
@@ -503,27 +482,7 @@ class ASILCalculator {
             }
         });
 
-        // Live update of About panel from component input with debouncing
-        let debounceTimer;
-        document.getElementById('componentInput').addEventListener('input', (e) => {
-            const description = e.target.value.trim();
-            clearTimeout(debounceTimer);
-            
-            // Clear description if input is empty
-            if (!description) {
-                if (this.featureDescription) {
-                    this.featureDescription.textContent = '';
-                }
-                return;
-            }
-
-            // Show loading state
-            if (this.featureDescription) {
-                this.featureDescription.textContent = 'Waiting for analysis...';
-                this.featureDescription.classList.add('loading');
-                this.featureDescription.classList.remove('about-update-highlight');
-            }
-        });
+        // Removed duplicate componentInput event listener
         
         console.log('All event listeners attached successfully');
     }
@@ -1489,6 +1448,187 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
         return descriptions[level] || 'Controllability assessment pending';
     }
 
+    setupDebouncedAboutInputHandler() {
+        if (!this.componentInput || !this.featureDescription) {
+            console.error('Required elements for About panel updates not found');
+            return;
+        }
+
+        // Clean up any existing handlers and timers
+        this.clearAboutPanelTimers();
+
+        this.componentInput.addEventListener('input', async (e) => {
+            const value = e.target.value.trim();
+
+            // Always clear pending timers
+            this.clearAboutPanelTimers();
+
+            // Clear panel if empty input
+            if (!value) {
+                this.updateAboutPanel('');
+                return;
+            }
+
+            // Show loading state immediately
+            this.showAboutPanelLoading();
+
+            // Debounce the AI request
+            this._aboutInputTimer = setTimeout(async () => {
+                try {
+                    const description = await this.generateAIDescription(value, 'short');
+                    this.updateAboutPanel(description.trim());
+                    this.showAboutPanelUpdateFeedback();
+                } catch (error) {
+                    console.error('Error generating AI description:', error);
+                    const fallbackMessage = error.message.includes('API key')
+                        ? 'Please configure your API key in Settings to enable AI-powered descriptions.'
+                        : 'Unable to generate description. Please check your network connection and try again.';
+                    this.updateAboutPanel(fallbackMessage);
+                } finally {
+                    this.hideAboutPanelLoading();
+                }
+            }, 1000);
+        });
+    }
+
+    updateAboutPanel(text) {
+        if (!this.featureDescription) return;
+        this.featureDescription.textContent = text;
+    }
+
+    showAboutPanelLoading() {
+        if (!this.featureDescription) return;
+        this.featureDescription.textContent = 'Waiting for analysis...';
+        this.featureDescription.classList.add('loading');
+        this.featureDescription.classList.remove('about-update-highlight');
+    }
+
+    hideAboutPanelLoading() {
+        if (!this.featureDescription) return;
+        this.featureDescription.classList.remove('loading');
+    }
+
+    showAboutPanelUpdateFeedback() {
+        if (!this.featureDescription) return;
+        this.featureDescription.classList.add('about-update-highlight');
+        this._aboutHighlightTimer = setTimeout(() => {
+            if (this.featureDescription) {
+                this.featureDescription.classList.remove('about-update-highlight');
+            }
+        }, 2000);
+    }
+
+    clearAboutPanelTimers() {
+        if (this._aboutInputTimer) {
+            clearTimeout(this._aboutInputTimer);
+            this._aboutInputTimer = null;
+        }
+        if (this._aboutHighlightTimer) {
+            clearTimeout(this._aboutHighlightTimer);
+            this._aboutHighlightTimer = null;
+        }
+    }
+
+    async saveCurrentAnalysisToDatabase() {
+        if (!this.currentAnalysis) {
+            this.showSaveStatus('No analysis results to save', 'error');
+            return;
+        }
+
+        const { analysis, componentName } = this.currentAnalysis;
+
+        // Prepare component data
+        const newComponent = {
+            name: componentName.substring(0, 100), // Limit name length
+            category: this.componentCategory ? this.componentCategory.textContent : 'Manual Analysis',
+            description: this.featureDescription ? this.featureDescription.textContent : '',
+            potential_hazards: analysis.hazards || ['Component failure'],
+            failure_modes: analysis.failures || ['Hardware failure'],
+            safety_recommendations: analysis.recommendations || ['Follow ISO 26262 guidelines'],
+            S: parseInt(analysis.severity.level.replace('S', '')),
+            E: parseInt(analysis.exposure.level.replace('E', '')),
+            C: parseInt(analysis.controllability.level.replace('C', '')),
+            asil: this.calculateASIL(
+                analysis.severity.level,
+                analysis.exposure.level,
+                analysis.controllability.level
+            ),
+            reasons: {
+                S: analysis.severity.description,
+                E: analysis.exposure.description,
+                C: analysis.controllability.description
+            }
+        };
+
+        // Check for duplicates
+        const matchingComponent = this.findMatchingComponent(newComponent);
+        if (matchingComponent) {
+            this.showSaveStatus('Match found in database! This component analysis already exists.', 'match');
+            return;
+        }
+
+        try {
+            // Generate unique key
+            const key = this.generateComponentKey(newComponent.name);
+            
+            // Save to database
+            this.componentsDB[key] = newComponent;
+            
+            // Update UI
+            this.populateComponentSelect();
+            this.populateComponentsTable();
+            this.updateDashboard();
+            
+            this.showSaveStatus('ASIL analysis saved to database', 'saved');
+        } catch (error) {
+            console.error('Error saving analysis:', error);
+            this.showSaveStatus('Error: Could not save ASIL analysis. Please try again.', 'error');
+        }
+    }
+
+    findMatchingComponent(newComponent) {
+        return Object.values(this.componentsDB).find(comp => {
+            // Check for functional equality
+            const nameMatch = comp.name.toLowerCase() === newComponent.name.toLowerCase();
+            const categoryMatch = comp.category === newComponent.category;
+            const secMatch = comp.S === newComponent.S &&
+                           comp.E === newComponent.E &&
+                           comp.C === newComponent.C &&
+                           comp.asil === newComponent.asil;
+            
+            return nameMatch && categoryMatch && secMatch;
+        });
+    }
+
+    generateComponentKey(name) {
+        const baseKey = name.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        
+        // Add numeric suffix if key exists
+        let key = baseKey;
+        let counter = 1;
+        while (this.componentsDB[key]) {
+            key = `${baseKey}_${counter}`;
+            counter++;
+        }
+        
+        return key;
+    }
+
+    showSaveStatus(message, type) {
+        if (!this.saveStatus) return;
+
+        this.saveStatus.textContent = message;
+        this.saveStatus.className = 'save-status ' + type;
+        this.saveStatus.classList.remove('hidden');
+
+        // Hide status after 5 seconds
+        setTimeout(() => {
+            this.saveStatus.classList.add('hidden');
+        }, 5000);
+    }
+
     calculateASIL(severity, exposure, controllability) {
         const asilMatrix = {
             'S0': {
@@ -1536,6 +1676,13 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
     }
 
     async displayComprehensiveResults(analysis, selectedComponent) {
+        // Store current analysis results for save functionality
+        this.currentAnalysis = {
+            analysis: analysis,
+            selectedComponent: selectedComponent,
+            componentName: selectedComponent ? selectedComponent.name : (this.componentInput ? this.componentInput.value.trim() : 'Manual Input')
+        };
+        
         // Feature Details
         if (selectedComponent) {
             if (this.componentName) this.componentName.textContent = selectedComponent.name;

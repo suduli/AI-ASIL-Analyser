@@ -1562,6 +1562,41 @@ select.form-control {
     margin: 0 auto;
 }
 
+/* Save ASIL section */
+.save-asil-section {
+    margin-top: var(--space-24);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-12);
+}
+
+.save-status {
+    padding: var(--space-12) var(--space-16);
+    border-radius: var(--radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--duration-normal) var(--ease-standard);
+}
+
+.save-status.match {
+    background: rgba(var(--color-success-rgb), 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(var(--color-success-rgb), 0.2);
+}
+
+.save-status.error {
+    background: rgba(var(--color-error-rgb), 0.1);
+    color: var(--color-error);
+    border: 1px solid rgba(var(--color-error-rgb), 0.2);
+}
+
+.save-status.saved {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+    border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+}
+
 /* NEW: 3-Column Safety Analysis Grid */
 .safety-analysis-grid {
     display: grid;
