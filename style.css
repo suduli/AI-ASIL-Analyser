@@ -2392,9 +2392,6 @@ select.form-control {
     position: relative;
 }
 
-/* Note: Main component-select styling is already defined earlier.
-   This redundant definition is removed to avoid conflicts. */
-
 .sec-adjustments {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

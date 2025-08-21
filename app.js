@@ -206,136 +206,7 @@ class ASILCalculator {
         this.updateDashboard();
         this.populateComponentSelect();
         this.populateComponentsTable();
-        this.setupProviderUI();
         console.log('ASIL Calculator v16 initialized successfully');
-    }
-
-    setupProviderUI() {
-        const providerSelect = document.getElementById('providerSelect');
-        const openRouterModelSelect = document.getElementById('openRouterModelSelect');
-        
-        if (providerSelect && openRouterModelSelect) {
-            // Initially hide/show OpenRouter model select based on current provider
-            openRouterModelSelect.parentElement.style.display = 
-                this.settings.provider === 'openrouter' ? 'block' : 'none';
-
-            // Add test event listener for provider changes
-            providerSelect.addEventListener('change', () => {
-                const isOpenRouter = providerSelect.value === 'openrouter';
-                openRouterModelSelect.parentElement.style.display = isOpenRouter ? 'block' : 'none';
-                
-                // For testing: Log provider change
-                console.log('Provider changed to:', providerSelect.value);
-                if (isOpenRouter) {
-                    console.log('OpenRouter model:', openRouterModelSelect.value);
-                }
-            });
-        }
-    }
-
-    initializeElements() {
-        // Save ASIL button
-        this.saveToDbBtn = document.getElementById('saveToDbBtn');
-        this.saveStatus = document.getElementById('saveStatus');
-        
-        // Header buttons
-        this.settingsBtn = document.getElementById('settingsBtn');
-        this.databaseBtn = document.getElementById('databaseBtn');
-        this.asilGuideBtn = document.getElementById('asilGuideBtn');
-        this.providerSelect = document.getElementById('providerSelect');
-        this.openRouterModelSelect = document.getElementById('openRouterModelSelect');
-        
-        // Tab elements for new design
-        this.manualTabInput = document.getElementById('manualTabInput');
-        this.databaseTabInput = document.getElementById('databaseTabInput');
-        this.manualInputPanel = document.getElementById('manualInputPanel');
-        this.databaseInputPanel = document.getElementById('databaseInputPanel');
-
-        // Modal elements
-        this.settingsModal = document.getElementById('settingsModal');
-        this.databaseModal = document.getElementById('databaseModal');
-        this.asilGuideModal = document.getElementById('asilGuideModal');
-        this.componentFormModal = document.getElementById('componentFormModal');
-
-        // Settings modal elements
-        this.closeSettingsModal = document.getElementById('closeSettingsModal');
-        this.providerSelect = document.getElementById('providerSelect');
-        this.apiKeyInput = document.getElementById('apiKeyInput');
-        this.testKeyBtn = document.getElementById('testKeyBtn');
-        this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
-        this.keyStatus = document.getElementById('keyStatus');
-
-        // Database modal elements
-        this.closeDatabaseModal = document.getElementById('closeDatabaseModal');
-        this.searchComponents = document.getElementById('searchComponents');
-        this.categoryFilter = document.getElementById('categoryFilter');
-        this.addComponentBtn = document.getElementById('addComponentBtn');
-        this.componentsTableBody = document.getElementById('componentsTableBody');
-
-        // Other modal closes
-        this.closeAsilGuideModal = document.getElementById('closeAsilGuideModal');
-        this.closeComponentFormModal = document.getElementById('closeComponentFormModal');
-
-        // Input elements
-        this.manualInput = document.getElementById('manualInput');
-        this.databaseInput = document.getElementById('databaseInput');
-        this.componentInput = document.getElementById('componentInput');
-        this.componentSelect = document.getElementById('componentSelect');
-
-        // S/E/C Adjustments
-        this.severitySelect = document.getElementById('severitySelect');
-        this.exposureSelect = document.getElementById('exposureSelect');
-        this.controllabilitySelect = document.getElementById('controllabilitySelect');
-
-        // Analysis elements
-        this.analyzeBtn = document.getElementById('analyzeBtn');
-        this.spinner = document.getElementById('spinner');
-        this.errorBanner = document.getElementById('errorBanner');
-        this.errorMessage = document.getElementById('errorMessage');
-        this.resultsSection = document.getElementById('resultsSection');
-
-        // Dashboard elements
-        this.totalComponents = document.getElementById('totalComponents');
-        this.apiStatus = document.getElementById('apiStatus');
-        this.analysesCountEl = document.getElementById('analysesCount');
-
-        // Result display elements
-        this.componentName = document.getElementById('componentName');
-        this.componentCategory = document.getElementById('componentCategory');
-    // The About panel uses a class-based paragraph; prefer that, fall back to id for backward compatibility
-    this.featureDescription = document.querySelector('.about-feature-description') || document.getElementById('featureDescription');
-        this.hazardsList = document.getElementById('hazardsList');
-        this.failureList = document.getElementById('failureList');
-        this.recommendationsList = document.getElementById('recommendationsList');
-
-        // Analysis results
-        this.severityValue = document.getElementById('severityValue');
-        this.severityDesc = document.getElementById('severityDesc');
-        this.exposureValue = document.getElementById('exposureValue');
-        this.exposureDesc = document.getElementById('exposureDesc');
-        this.controllabilityValue = document.getElementById('controllabilityValue');
-        this.controllabilityDesc = document.getElementById('controllabilityDesc');
-        this.asilBadge = document.getElementById('asilBadge');
-        this.asilExplanation = document.getElementById('asilExplanation');
-
-        // Comparison table elements
-        this.aiSeverity = document.getElementById('aiSeverity');
-        this.dbSeverity = document.getElementById('dbSeverity');
-        this.severityMatch = document.getElementById('severityMatch');
-        this.aiExposure = document.getElementById('aiExposure');
-        this.dbExposure = document.getElementById('dbExposure');
-        this.exposureMatch = document.getElementById('exposureMatch');
-        this.aiControllability = document.getElementById('aiControllability');
-        this.dbControllability = document.getElementById('dbControllability');
-        this.controllabilityMatch = document.getElementById('controllabilityMatch');
-        this.aiAsil = document.getElementById('aiAsil');
-        this.dbAsil = document.getElementById('dbAsil');
-        this.asilMatch = document.getElementById('asilMatch');
-
-        // Component form elements
-        this.componentForm = document.getElementById('componentForm');
-        this.componentFormTitle = document.getElementById('componentFormTitle');
-        this.cancelComponentForm = document.getElementById('cancelComponentForm');
     }
 
     attachEventListeners() {
@@ -360,7 +231,7 @@ class ASILCalculator {
             });
         }
 
-                // Set up the unified debounced About panel input handler
+        // Set up the unified debounced About panel input handler
         if (this.componentInput && this.featureDescription) {
             this.setupDebouncedAboutInputHandler();
         }
@@ -369,7 +240,6 @@ class ASILCalculator {
         if (this.settingsBtn) {
             this.settingsBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('Settings button clicked');
                 this.openModal('settings');
             };
         }
@@ -377,7 +247,6 @@ class ASILCalculator {
         if (this.databaseBtn) {
             this.databaseBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('Database button clicked');
                 this.openModal('database');
             };
         }
@@ -385,7 +254,6 @@ class ASILCalculator {
         if (this.asilGuideBtn) {
             this.asilGuideBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('ASIL Guide button clicked');
                 this.openModal('asilGuide');
             };
         }
@@ -493,7 +361,6 @@ class ASILCalculator {
         if (this.analyzeBtn) {
             this.analyzeBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('Analyze button clicked');
                 this.analyzeComponent();
             };
         }
@@ -549,7 +416,6 @@ class ASILCalculator {
     }
 
     openModal(modalType) {
-        console.log(`Opening modal: ${modalType}`);
         this.closeAllModals(); // Close any open modals first
         
         const modalMap = {
@@ -576,8 +442,6 @@ class ASILCalculator {
                 // Set up trap focus within modal
                 this.setupFocusTrap(modal);
             }, 50);
-            
-            console.log(`Modal ${modalType} opened successfully`);
         } else {
             console.error(`Modal ${modalType} not found`);
         }
@@ -610,7 +474,6 @@ class ASILCalculator {
     }
 
     closeModal(modalType) {
-        console.log(`Closing modal: ${modalType}`);
         const modalMap = {
             'settings': this.settingsModal,
             'database': this.databaseModal,
@@ -629,8 +492,6 @@ class ASILCalculator {
             if (this.lastFocusedElement) {
                 this.lastFocusedElement.focus();
             }
-            
-            console.log(`Modal ${modalType} closed successfully`);
         }
     }
 
@@ -722,8 +583,6 @@ class ASILCalculator {
         }
 
         // For testing: Log key validation attempt
-        console.log('Testing API key for provider:', this.settings.provider);
-        
         this.showKeyStatus('Testing API key...', 'testing');
         if (this.testKeyBtn) this.testKeyBtn.disabled = true;
 
@@ -1093,18 +952,17 @@ Hazards: ${component.potential_hazards.join(', ')}
         this.updateAboutFeature(selectedKey);
 
         const component = this.componentsDB[selectedKey];
+        
         console.log('Component selected:', component.name);
 
         // Update component details immediately
         if (this.componentName) this.componentName.textContent = component.name;
         if (this.componentCategory) this.componentCategory.textContent = component.category;
 
-        // Do not overwrite the About panel here with raw DB description; AI will produce the short 2-3 line summary on analyze
+        // Do not update About panel here with raw DB description; AI generates a summary during analysis
     }
 
     async analyzeComponent() {
-        console.log('Starting component analysis...');
-        
         // Prevent multiple analysis attempts
         if (this.analyzeBtn && this.analyzeBtn.classList.contains('loading')) {
             return;
@@ -1174,7 +1032,6 @@ Format: Return exactly 3 lines, one point per line.`;
         try {
             // Step 1: Automotive validation (skip if from database)
             if (method === 'manual') {
-                console.log('Checking if component is automotive...');
                 const isAutomotive = await this.checkIfAutomotive(component);
                 if (!isAutomotive) {
                     this.showError('This component is not part of an automobile or vehicle subsystem. Please describe a component that is specifically part of automotive systems.');
@@ -1183,11 +1040,9 @@ Format: Return exactly 3 lines, one point per line.`;
             }
 
             // Step 2: Perform ASIL analysis
-            console.log('Performing ASIL analysis...');
             const analysis = await this.performASILAnalysis(component, selectedComponent);
             
             // Step 3: Display comprehensive results
-            console.log('Displaying results...');
             this.displayComprehensiveResults(analysis, selectedComponent);
             
             // Update analysis count
@@ -2150,36 +2005,10 @@ function setupReducedMotionSupport() {
     });
 }
 
-// Function to remove any demo content that might be lingering
-function removeDemoContent() {
-    // Remove demo animations section if it exists
-    const demoSection = document.querySelector('.demo-animations-section');
-    if (demoSection) {
-        demoSection.remove();
-        console.log('Demo animations section removed');
-    }
-    
-    // Remove any elements with demo-related classes
-    const demoCards = document.querySelectorAll('.demo-card');
-    demoCards.forEach(card => card.remove());
-    
-    const demoGrids = document.querySelectorAll('.demo-cards-grid');
-    demoGrids.forEach(grid => grid.remove());
-    
-    // Remove any elements containing "Animation Showcase"
-    const showcaseElements = Array.from(document.querySelectorAll('*')).filter(el => 
-        el.textContent && el.textContent.includes('Animation Showcase')
-    );
-    showcaseElements.forEach(el => el.remove());
-    
-    console.log('Demo content cleanup complete');
-}
-
 // Initialize the application when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initializing ASIL Calculator v16...');
-        removeDemoContent(); // Remove any demo content first
         setupThemeToggle(); // Add theme toggle before calculator initialization
         setupReducedMotionSupport(); // Add reduced motion support
         window.asilCalculator = new ASILCalculator();
@@ -2188,7 +2017,6 @@ if (document.readyState === 'loading') {
     });
 } else {
     console.log('DOM ready - Initializing ASIL Calculator v16...');
-    removeDemoContent(); // Remove any demo content first
     setupThemeToggle(); // Add theme toggle before calculator initialization
     setupReducedMotionSupport(); // Add reduced motion support
     window.asilCalculator = new ASILCalculator();
@@ -2233,7 +2061,7 @@ function setupFooterLinks() {
         footerDatabaseLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (window.asilCalculator) {
-                window.asilCalculator.openDatabaseModal();
+                window.asilCalculator.openModal('database');
             }
         });
     }
@@ -2244,7 +2072,7 @@ function setupFooterLinks() {
         footerAsilGuideLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (window.asilCalculator) {
-                window.asilCalculator.openAsilGuideModal();
+                window.asilCalculator.openModal('asilGuide');
             }
         });
     }
