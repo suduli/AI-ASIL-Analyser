@@ -3254,6 +3254,7 @@ select.form-control {
     overflow-y: auto;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-base);
+    position: relative; /* create a stacking context for sticky headers */
 }
 
 .components-table {
@@ -3270,11 +3271,15 @@ select.form-control {
 }
 
 .components-table th {
-    background: rgba(255, 255, 255, 0.05);
+    /* Use a solid surface color for the sticky header to avoid overlap showing through */
+    background: var(--color-surface);
+    backdrop-filter: blur(6px);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text);
     position: sticky;
     top: 0;
+    z-index: 5; /* keep header above rows and action buttons */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12); /* subtle separation like Freeze Panes */
 }
 
 .components-table td {

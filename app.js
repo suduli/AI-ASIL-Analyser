@@ -209,6 +209,35 @@ class ASILCalculator {
         console.log('ASIL Calculator v16 initialized successfully');
     }
 
+    initializeElements() {
+        const ids = [
+            'settingsBtn', 'databaseBtn', 'asilGuideBtn', 'closeSettingsModal', 'closeDatabaseModal',
+            'closeAsilGuideModal', 'closeComponentFormModal', 'settingsModal', 'databaseModal',
+            'asilGuideModal', 'componentFormModal', 'providerSelect', 'openRouterModelSelect',
+            'apiKeyInput', 'keyStatus', 'testKeyBtn', 'saveSettingsBtn', 'totalComponents',
+            'apiStatus', 'analysesCount', 'componentInput', 'databaseInput', 'manualInput',
+            'componentSelect', 'severitySelect', 'exposureSelect', 'controllabilitySelect',
+            'analyzeBtn', 'spinner', 'errorBanner', 'errorMessage', 'resultsSection',
+            'componentName', 'componentCategory', 'featureDescription', 'severityValue',
+            'severityDesc', 'exposureValue', 'exposureDesc', 'controllabilityValue',
+            'controllabilityDesc', 'asilBadge', 'asilExplanation', 'saveToDbBtn', 'saveStatus',
+            'hazardsList', 'failureList', 'recommendationsList', 'aiSeverity', 'dbSeverity',
+            'severityMatch', 'aiExposure', 'dbExposure', 'exposureMatch', 'aiControllability',
+            'dbControllability', 'controllabilityMatch', 'aiAsil', 'dbAsil', 'asilMatch',
+            'searchComponents', 'categoryFilter', 'componentsTableBody', 'addComponentBtn',
+            'componentForm', 'componentFormTitle', 'cancelComponentForm', 'manualTabInput',
+            'databaseTabInput', 'manualInputPanel', 'databaseInputPanel'
+        ];
+
+        ids.forEach(id => {
+            const camelCaseId = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
+            this[camelCaseId] = document.getElementById(id);
+        });
+
+        // Special case for elements where id doesn't match property name
+        this.analysesCountEl = document.getElementById('analysesCount');
+    }
+
     attachEventListeners() {
         // Save ASIL to Database button
         if (this.saveToDbBtn) {
@@ -1764,7 +1793,7 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
             if (this.exposureMatch) this.exposureMatch.textContent = 'N/A';
             
             if (this.aiControllability) this.aiControllability.textContent = aiAnalysis.controllability.level;
-            if (this.dbControllability) this.dbControllability.textContent = 'N/A';
+                       if (this.dbControllability) this.dbControllability.textContent = 'N/A';
             if (this.controllabilityMatch) this.controllabilityMatch.textContent = 'N/A';
             
             const aiAsilValue = this.calculateASIL(
