@@ -183,7 +183,12 @@ class ASILCalculator {
         };
         
         this.isKeyValid = false;
-        this.analysesCount = 0;
+        // Restore persisted analyses count when available so the counter survives reloads
+        try {
+            this.analysesCount = parseInt(localStorage.getItem('analysesCount')) || 0;
+        } catch (e) {
+            this.analysesCount = 0;
+        }
         this.componentsDB = COMPONENTS_DB;
         this.filteredComponents = Object.keys(this.componentsDB);
         this.currentEditKey = null;
@@ -223,7 +228,7 @@ class ASILCalculator {
             'closeAsilGuideModal', 'closeComponentFormModal', 'settingsModal', 'databaseModal',
             'asilGuideModal', 'componentFormModal', 'providerSelect', 'openRouterModelSelect',
             'apiKeyInput', 'keyStatus', 'testKeyBtn', 'saveSettingsBtn', 'totalComponents',
-            'apiStatus', 'analysesCount', 'componentInput', 'databaseInput', 'manualInput',
+            'apiStatus', 'componentInput', 'databaseInput', 'manualInput',
             'componentSelect', 'severitySelect', 'exposureSelect', 'controllabilitySelect',
             'analyzeBtn', 'spinner', 'errorBanner', 'errorMessage', 'resultsSection',
             'componentName', 'componentCategory', 'featureDescription', 'severityValue',
@@ -572,6 +577,19 @@ class ASILCalculator {
         
         if (this.analysesCountEl) {
             this.analysesCountEl.textContent = this.analysesCount.toString();
+        }
+    }
+
+    // Unified increment handler for analysesCount.
+    // Keeps state, updates the dashboard and persists the value to localStorage.
+    incrementAnalysesCount(by = 1) {
+        try {
+            this.analysesCount = (this.analysesCount || 0) + by;
+            // Persist for session continuity
+            try { localStorage.setItem('analysesCount', String(this.analysesCount)); } catch (e) { /* ignore storage errors */ }
+            this.updateDashboard();
+        } catch (e) {
+            console.warn('incrementAnalysesCount failed', e);
         }
     }
 
@@ -1070,9 +1088,8 @@ Format: Return exactly 3 lines, one point per line.`;
             // Step 3: Display comprehensive results
             this.displayComprehensiveResults(analysis, selectedComponent);
             
-            // Update analysis count
-            this.analysesCount++;
-            this.updateDashboard();
+            // Update analysis count (centralized to persist and update dashboard)
+            this.incrementAnalysesCount();
             
             // Restore focus to the button when complete
             if (previouslyFocused && previouslyFocused.focus) {
@@ -1498,8 +1515,7 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
                     this.updateAboutPanel(description.trim());
                     // Count this as an analysis event (user asked Describe Component -> AI generated output)
                     try {
-                        this.analysesCount = (this.analysesCount || 0) + 1;
-                        this.updateDashboard();
+                        this.incrementAnalysesCount();
                     } catch (incErr) {
                         console.warn('Failed to increment analysesCount', incErr);
                     }
