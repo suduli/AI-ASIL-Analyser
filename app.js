@@ -202,6 +202,14 @@ class ASILCalculator {
         // Use immediate execution to avoid timing issues
         this.initializeElements();
         this.attachEventListeners();
+        // Ensure input panels reflect the currently selected input method (replace global setupTabSwitching)
+        try {
+            const selectedInput = document.querySelector('input[name="inputMethod"]:checked');
+            const method = selectedInput ? selectedInput.value : (this.manualTabInput && this.manualTabInput.checked ? 'manual' : 'database');
+            this.toggleInputMethod(method);
+        } catch (e) {
+            // ignore if DOM not ready or elements missing
+        }
         this.loadSettings();
         this.updateDashboard();
         this.populateComponentSelect();
@@ -226,7 +234,10 @@ class ASILCalculator {
             'dbControllability', 'controllabilityMatch', 'aiAsil', 'dbAsil', 'asilMatch',
             'searchComponents', 'categoryFilter', 'componentsTableBody', 'addComponentBtn',
             'componentForm', 'componentFormTitle', 'cancelComponentForm', 'manualTabInput',
-            'databaseTabInput', 'manualInputPanel', 'databaseInputPanel'
+            'databaseTabInput', 'manualInputPanel', 'databaseInputPanel',
+            // Component form inputs
+            'componentNameInput', 'componentCategoryInput', 'componentDescriptionInput',
+            'componentSeverityInput', 'componentExposureInput', 'componentControllabilityInput'
         ];
 
         ids.forEach(id => {
@@ -571,9 +582,8 @@ class ASILCalculator {
         
         // Update model if OpenRouter is selected
         if (this.settings.useOpenRouter) {
-            const openRouterModelSelect = document.getElementById('openRouterModelSelect');
-            if (openRouterModelSelect) {
-                this.settings.openRouterModel = openRouterModelSelect.value;
+            if (this.openRouterModelSelect) {
+                this.settings.openRouterModel = this.openRouterModelSelect.value;
             }
         }
 
@@ -853,19 +863,12 @@ Hazards: ${component.potential_hazards.join(', ')}
             if (this.componentFormTitle) this.componentFormTitle.textContent = 'Edit Component';
             
             // Populate form fields
-            const nameInput = document.getElementById('componentNameInput');
-            const categoryInput = document.getElementById('componentCategoryInput');
-            const descInput = document.getElementById('componentDescriptionInput');
-            const severityInput = document.getElementById('componentSeverityInput');
-            const exposureInput = document.getElementById('componentExposureInput');
-            const controllabilityInput = document.getElementById('componentControllabilityInput');
-
-            if (nameInput) nameInput.value = component.name;
-            if (categoryInput) categoryInput.value = component.category;
-            if (descInput) descInput.value = component.description;
-            if (severityInput) severityInput.value = component.S.toString();
-            if (exposureInput) exposureInput.value = component.E.toString();
-            if (controllabilityInput) controllabilityInput.value = component.C.toString();
+            if (this.componentNameInput) this.componentNameInput.value = component.name;
+            if (this.componentCategoryInput) this.componentCategoryInput.value = component.category;
+            if (this.componentDescriptionInput) this.componentDescriptionInput.value = component.description;
+            if (this.componentSeverityInput) this.componentSeverityInput.value = component.S.toString();
+            if (this.componentExposureInput) this.componentExposureInput.value = component.E.toString();
+            if (this.componentControllabilityInput) this.componentControllabilityInput.value = component.C.toString();
         } else {
             // Add mode
             if (this.componentFormTitle) this.componentFormTitle.textContent = 'Add New Component';
@@ -874,19 +877,12 @@ Hazards: ${component.potential_hazards.join(', ')}
     }
 
     saveComponent() {
-        const nameInput = document.getElementById('componentNameInput');
-        const categoryInput = document.getElementById('componentCategoryInput');
-        const descInput = document.getElementById('componentDescriptionInput');
-        const severityInput = document.getElementById('componentSeverityInput');
-        const exposureInput = document.getElementById('componentExposureInput');
-        const controllabilityInput = document.getElementById('componentControllabilityInput');
-
-        const name = nameInput ? nameInput.value.trim() : '';
-        const category = categoryInput ? categoryInput.value : '';
-        const description = descInput ? descInput.value.trim() : '';
-        const severity = severityInput ? parseInt(severityInput.value) : 0;
-        const exposure = exposureInput ? parseInt(exposureInput.value) : 0;
-        const controllability = controllabilityInput ? parseInt(controllabilityInput.value) : 0;
+    const name = this.componentNameInput ? this.componentNameInput.value.trim() : '';
+    const category = this.componentCategoryInput ? this.componentCategoryInput.value : '';
+    const description = this.componentDescriptionInput ? this.componentDescriptionInput.value.trim() : '';
+    const severity = this.componentSeverityInput ? parseInt(this.componentSeverityInput.value) : 0;
+    const exposure = this.componentExposureInput ? parseInt(this.componentExposureInput.value) : 0;
+    const controllability = this.componentControllabilityInput ? parseInt(this.componentControllabilityInput.value) : 0;
 
         if (!name || !category || !description) {
             alert('Please fill in all required fields');
@@ -2041,7 +2037,7 @@ if (document.readyState === 'loading') {
         setupThemeToggle(); // Add theme toggle before calculator initialization
         setupReducedMotionSupport(); // Add reduced motion support
         window.asilCalculator = new ASILCalculator();
-        setupTabSwitching(); // Add this line for the tab functionality
+        // Tab switching handled by ASILCalculator.init
         setupFooterLinks(); // Add footer functionality
     });
 } else {
@@ -2049,37 +2045,8 @@ if (document.readyState === 'loading') {
     setupThemeToggle(); // Add theme toggle before calculator initialization
     setupReducedMotionSupport(); // Add reduced motion support
     window.asilCalculator = new ASILCalculator();
-    setupTabSwitching(); // Add this line for the tab functionality
+    // Tab switching handled by ASILCalculator.init
     setupFooterLinks(); // Add footer functionality
-}
-
-// Tab switching functionality for the redesigned Component Analysis panel
-function setupTabSwitching() {
-    const manualTabInput = document.getElementById('manualTabInput');
-    const databaseTabInput = document.getElementById('databaseTabInput');
-    const manualInputPanel = document.getElementById('manualInputPanel');
-    const databaseInputPanel = document.getElementById('databaseInputPanel');
-
-    if (manualTabInput && databaseTabInput && manualInputPanel && databaseInputPanel) {
-        // Set initial state
-        manualInputPanel.style.display = manualTabInput.checked ? 'block' : 'none';
-        databaseInputPanel.style.display = databaseTabInput.checked ? 'block' : 'none';
-
-        // Add event listeners
-        manualTabInput.addEventListener('change', function() {
-            if (this.checked) {
-                manualInputPanel.style.display = 'block';
-                databaseInputPanel.style.display = 'none';
-            }
-        });
-
-        databaseTabInput.addEventListener('change', function() {
-            if (this.checked) {
-                manualInputPanel.style.display = 'none';
-                databaseInputPanel.style.display = 'block';
-            }
-        });
-    }
 }
 
 // Footer links functionality
