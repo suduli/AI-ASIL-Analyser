@@ -1496,6 +1496,13 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
                 try {
                     const description = await this.generateAIDescription(value, 'short');
                     this.updateAboutPanel(description.trim());
+                    // Count this as an analysis event (user asked Describe Component -> AI generated output)
+                    try {
+                        this.analysesCount = (this.analysesCount || 0) + 1;
+                        this.updateDashboard();
+                    } catch (incErr) {
+                        console.warn('Failed to increment analysesCount', incErr);
+                    }
                     this.showAboutPanelUpdateFeedback();
                 } catch (error) {
                     console.error('Error generating AI description:', error);
