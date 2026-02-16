@@ -183,7 +183,12 @@ class ASILCalculator {
         };
         
         this.isKeyValid = false;
-        this.analysesCount = 0;
+        // Restore persisted analyses count when available so the counter survives reloads
+        try {
+            this.analysesCount = parseInt(localStorage.getItem('analysesCount')) || 0;
+        } catch (e) {
+            this.analysesCount = 0;
+        }
         this.componentsDB = COMPONENTS_DB;
         this.filteredComponents = Object.keys(this.componentsDB);
         this.currentEditKey = null;
@@ -202,140 +207,51 @@ class ASILCalculator {
         // Use immediate execution to avoid timing issues
         this.initializeElements();
         this.attachEventListeners();
+        // Ensure input panels reflect the currently selected input method (replace global setupTabSwitching)
+        try {
+            const selectedInput = document.querySelector('input[name="inputMethod"]:checked');
+            const method = selectedInput ? selectedInput.value : (this.manualTabInput && this.manualTabInput.checked ? 'manual' : 'database');
+            this.toggleInputMethod(method);
+        } catch (e) {
+            // ignore if DOM not ready or elements missing
+        }
         this.loadSettings();
         this.updateDashboard();
         this.populateComponentSelect();
         this.populateComponentsTable();
-        this.setupProviderUI();
         console.log('ASIL Calculator v16 initialized successfully');
     }
 
-    setupProviderUI() {
-        const providerSelect = document.getElementById('providerSelect');
-        const openRouterModelSelect = document.getElementById('openRouterModelSelect');
-        
-        if (providerSelect && openRouterModelSelect) {
-            // Initially hide/show OpenRouter model select based on current provider
-            openRouterModelSelect.parentElement.style.display = 
-                this.settings.provider === 'openrouter' ? 'block' : 'none';
-
-            // Add test event listener for provider changes
-            providerSelect.addEventListener('change', () => {
-                const isOpenRouter = providerSelect.value === 'openrouter';
-                openRouterModelSelect.parentElement.style.display = isOpenRouter ? 'block' : 'none';
-                
-                // For testing: Log provider change
-                console.log('Provider changed to:', providerSelect.value);
-                if (isOpenRouter) {
-                    console.log('OpenRouter model:', openRouterModelSelect.value);
-                }
-            });
-        }
-    }
-
     initializeElements() {
-        // Save ASIL button
-        this.saveToDbBtn = document.getElementById('saveToDbBtn');
-        this.saveStatus = document.getElementById('saveStatus');
-        
-        // Header buttons
-        this.settingsBtn = document.getElementById('settingsBtn');
-        this.databaseBtn = document.getElementById('databaseBtn');
-        this.asilGuideBtn = document.getElementById('asilGuideBtn');
-        this.providerSelect = document.getElementById('providerSelect');
-        this.openRouterModelSelect = document.getElementById('openRouterModelSelect');
-        
-        // Tab elements for new design
-        this.manualTabInput = document.getElementById('manualTabInput');
-        this.databaseTabInput = document.getElementById('databaseTabInput');
-        this.manualInputPanel = document.getElementById('manualInputPanel');
-        this.databaseInputPanel = document.getElementById('databaseInputPanel');
+        const ids = [
+            'settingsBtn', 'databaseBtn', 'asilGuideBtn', 'closeSettingsModal', 'closeDatabaseModal',
+            'closeAsilGuideModal', 'closeComponentFormModal', 'settingsModal', 'databaseModal',
+            'asilGuideModal', 'componentFormModal', 'providerSelect', 'openRouterModelSelect',
+            'apiKeyInput', 'keyStatus', 'testKeyBtn', 'saveSettingsBtn', 'totalComponents',
+            'apiStatus', 'componentInput', 'databaseInput', 'manualInput',
+            'componentSelect', 'severitySelect', 'exposureSelect', 'controllabilitySelect',
+            'analyzeBtn', 'spinner', 'errorBanner', 'errorMessage', 'resultsSection',
+            'componentName', 'componentCategory', 'featureDescription', 'severityValue',
+            'severityDesc', 'exposureValue', 'exposureDesc', 'controllabilityValue',
+            'controllabilityDesc', 'asilBadge', 'asilExplanation', 'saveToDbBtn', 'saveStatus',
+            'hazardsList', 'failureList', 'recommendationsList', 'aiSeverity', 'dbSeverity',
+            'severityMatch', 'aiExposure', 'dbExposure', 'exposureMatch', 'aiControllability',
+            'dbControllability', 'controllabilityMatch', 'aiAsil', 'dbAsil', 'asilMatch',
+            'searchComponents', 'categoryFilter', 'componentsTableBody', 'addComponentBtn',
+            'componentForm', 'componentFormTitle', 'cancelComponentForm', 'manualTabInput',
+            'databaseTabInput', 'manualInputPanel', 'databaseInputPanel',
+            // Component form inputs
+            'componentNameInput', 'componentCategoryInput', 'componentDescriptionInput',
+            'componentSeverityInput', 'componentExposureInput', 'componentControllabilityInput'
+        ];
 
-        // Modal elements
-        this.settingsModal = document.getElementById('settingsModal');
-        this.databaseModal = document.getElementById('databaseModal');
-        this.asilGuideModal = document.getElementById('asilGuideModal');
-        this.componentFormModal = document.getElementById('componentFormModal');
+        ids.forEach(id => {
+            const camelCaseId = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
+            this[camelCaseId] = document.getElementById(id);
+        });
 
-        // Settings modal elements
-        this.closeSettingsModal = document.getElementById('closeSettingsModal');
-        this.providerSelect = document.getElementById('providerSelect');
-        this.apiKeyInput = document.getElementById('apiKeyInput');
-        this.testKeyBtn = document.getElementById('testKeyBtn');
-        this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
-        this.keyStatus = document.getElementById('keyStatus');
-
-        // Database modal elements
-        this.closeDatabaseModal = document.getElementById('closeDatabaseModal');
-        this.searchComponents = document.getElementById('searchComponents');
-        this.categoryFilter = document.getElementById('categoryFilter');
-        this.addComponentBtn = document.getElementById('addComponentBtn');
-        this.componentsTableBody = document.getElementById('componentsTableBody');
-
-        // Other modal closes
-        this.closeAsilGuideModal = document.getElementById('closeAsilGuideModal');
-        this.closeComponentFormModal = document.getElementById('closeComponentFormModal');
-
-        // Input elements
-        this.manualInput = document.getElementById('manualInput');
-        this.databaseInput = document.getElementById('databaseInput');
-        this.componentInput = document.getElementById('componentInput');
-        this.componentSelect = document.getElementById('componentSelect');
-
-        // S/E/C Adjustments
-        this.severitySelect = document.getElementById('severitySelect');
-        this.exposureSelect = document.getElementById('exposureSelect');
-        this.controllabilitySelect = document.getElementById('controllabilitySelect');
-
-        // Analysis elements
-        this.analyzeBtn = document.getElementById('analyzeBtn');
-        this.spinner = document.getElementById('spinner');
-        this.errorBanner = document.getElementById('errorBanner');
-        this.errorMessage = document.getElementById('errorMessage');
-        this.resultsSection = document.getElementById('resultsSection');
-
-        // Dashboard elements
-        this.totalComponents = document.getElementById('totalComponents');
-        this.apiStatus = document.getElementById('apiStatus');
+        // Special case for elements where id doesn't match property name
         this.analysesCountEl = document.getElementById('analysesCount');
-
-        // Result display elements
-        this.componentName = document.getElementById('componentName');
-        this.componentCategory = document.getElementById('componentCategory');
-    // The About panel uses a class-based paragraph; prefer that, fall back to id for backward compatibility
-    this.featureDescription = document.querySelector('.about-feature-description') || document.getElementById('featureDescription');
-        this.hazardsList = document.getElementById('hazardsList');
-        this.failureList = document.getElementById('failureList');
-        this.recommendationsList = document.getElementById('recommendationsList');
-
-        // Analysis results
-        this.severityValue = document.getElementById('severityValue');
-        this.severityDesc = document.getElementById('severityDesc');
-        this.exposureValue = document.getElementById('exposureValue');
-        this.exposureDesc = document.getElementById('exposureDesc');
-        this.controllabilityValue = document.getElementById('controllabilityValue');
-        this.controllabilityDesc = document.getElementById('controllabilityDesc');
-        this.asilBadge = document.getElementById('asilBadge');
-        this.asilExplanation = document.getElementById('asilExplanation');
-
-        // Comparison table elements
-        this.aiSeverity = document.getElementById('aiSeverity');
-        this.dbSeverity = document.getElementById('dbSeverity');
-        this.severityMatch = document.getElementById('severityMatch');
-        this.aiExposure = document.getElementById('aiExposure');
-        this.dbExposure = document.getElementById('dbExposure');
-        this.exposureMatch = document.getElementById('exposureMatch');
-        this.aiControllability = document.getElementById('aiControllability');
-        this.dbControllability = document.getElementById('dbControllability');
-        this.controllabilityMatch = document.getElementById('controllabilityMatch');
-        this.aiAsil = document.getElementById('aiAsil');
-        this.dbAsil = document.getElementById('dbAsil');
-        this.asilMatch = document.getElementById('asilMatch');
-
-        // Component form elements
-        this.componentForm = document.getElementById('componentForm');
-        this.componentFormTitle = document.getElementById('componentFormTitle');
-        this.cancelComponentForm = document.getElementById('cancelComponentForm');
     }
 
     attachEventListeners() {
@@ -360,7 +276,7 @@ class ASILCalculator {
             });
         }
 
-                // Set up the unified debounced About panel input handler
+        // Set up the unified debounced About panel input handler
         if (this.componentInput && this.featureDescription) {
             this.setupDebouncedAboutInputHandler();
         }
@@ -369,7 +285,6 @@ class ASILCalculator {
         if (this.settingsBtn) {
             this.settingsBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('Settings button clicked');
                 this.openModal('settings');
             };
         }
@@ -377,7 +292,6 @@ class ASILCalculator {
         if (this.databaseBtn) {
             this.databaseBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('Database button clicked');
                 this.openModal('database');
             };
         }
@@ -385,7 +299,6 @@ class ASILCalculator {
         if (this.asilGuideBtn) {
             this.asilGuideBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('ASIL Guide button clicked');
                 this.openModal('asilGuide');
             };
         }
@@ -493,7 +406,6 @@ class ASILCalculator {
         if (this.analyzeBtn) {
             this.analyzeBtn.onclick = (e) => {
                 e.preventDefault();
-                console.log('Analyze button clicked');
                 this.analyzeComponent();
             };
         }
@@ -549,7 +461,6 @@ class ASILCalculator {
     }
 
     openModal(modalType) {
-        console.log(`Opening modal: ${modalType}`);
         this.closeAllModals(); // Close any open modals first
         
         const modalMap = {
@@ -576,8 +487,6 @@ class ASILCalculator {
                 // Set up trap focus within modal
                 this.setupFocusTrap(modal);
             }, 50);
-            
-            console.log(`Modal ${modalType} opened successfully`);
         } else {
             console.error(`Modal ${modalType} not found`);
         }
@@ -610,7 +519,6 @@ class ASILCalculator {
     }
 
     closeModal(modalType) {
-        console.log(`Closing modal: ${modalType}`);
         const modalMap = {
             'settings': this.settingsModal,
             'database': this.databaseModal,
@@ -629,8 +537,6 @@ class ASILCalculator {
             if (this.lastFocusedElement) {
                 this.lastFocusedElement.focus();
             }
-            
-            console.log(`Modal ${modalType} closed successfully`);
         }
     }
 
@@ -674,6 +580,19 @@ class ASILCalculator {
         }
     }
 
+    // Unified increment handler for analysesCount.
+    // Keeps state, updates the dashboard and persists the value to localStorage.
+    incrementAnalysesCount(by = 1) {
+        try {
+            this.analysesCount = (this.analysesCount || 0) + by;
+            // Persist for session continuity
+            try { localStorage.setItem('analysesCount', String(this.analysesCount)); } catch (e) { /* ignore storage errors */ }
+            this.updateDashboard();
+        } catch (e) {
+            console.warn('incrementAnalysesCount failed', e);
+        }
+    }
+
     updateProvider() {
         const newProvider = this.providerSelect.value;
         this.settings.provider = newProvider;
@@ -681,9 +600,8 @@ class ASILCalculator {
         
         // Update model if OpenRouter is selected
         if (this.settings.useOpenRouter) {
-            const openRouterModelSelect = document.getElementById('openRouterModelSelect');
-            if (openRouterModelSelect) {
-                this.settings.openRouterModel = openRouterModelSelect.value;
+            if (this.openRouterModelSelect) {
+                this.settings.openRouterModel = this.openRouterModelSelect.value;
             }
         }
 
@@ -722,8 +640,6 @@ class ASILCalculator {
         }
 
         // For testing: Log key validation attempt
-        console.log('Testing API key for provider:', this.settings.provider);
-        
         this.showKeyStatus('Testing API key...', 'testing');
         if (this.testKeyBtn) this.testKeyBtn.disabled = true;
 
@@ -965,19 +881,12 @@ Hazards: ${component.potential_hazards.join(', ')}
             if (this.componentFormTitle) this.componentFormTitle.textContent = 'Edit Component';
             
             // Populate form fields
-            const nameInput = document.getElementById('componentNameInput');
-            const categoryInput = document.getElementById('componentCategoryInput');
-            const descInput = document.getElementById('componentDescriptionInput');
-            const severityInput = document.getElementById('componentSeverityInput');
-            const exposureInput = document.getElementById('componentExposureInput');
-            const controllabilityInput = document.getElementById('componentControllabilityInput');
-
-            if (nameInput) nameInput.value = component.name;
-            if (categoryInput) categoryInput.value = component.category;
-            if (descInput) descInput.value = component.description;
-            if (severityInput) severityInput.value = component.S.toString();
-            if (exposureInput) exposureInput.value = component.E.toString();
-            if (controllabilityInput) controllabilityInput.value = component.C.toString();
+            if (this.componentNameInput) this.componentNameInput.value = component.name;
+            if (this.componentCategoryInput) this.componentCategoryInput.value = component.category;
+            if (this.componentDescriptionInput) this.componentDescriptionInput.value = component.description;
+            if (this.componentSeverityInput) this.componentSeverityInput.value = component.S.toString();
+            if (this.componentExposureInput) this.componentExposureInput.value = component.E.toString();
+            if (this.componentControllabilityInput) this.componentControllabilityInput.value = component.C.toString();
         } else {
             // Add mode
             if (this.componentFormTitle) this.componentFormTitle.textContent = 'Add New Component';
@@ -986,19 +895,12 @@ Hazards: ${component.potential_hazards.join(', ')}
     }
 
     saveComponent() {
-        const nameInput = document.getElementById('componentNameInput');
-        const categoryInput = document.getElementById('componentCategoryInput');
-        const descInput = document.getElementById('componentDescriptionInput');
-        const severityInput = document.getElementById('componentSeverityInput');
-        const exposureInput = document.getElementById('componentExposureInput');
-        const controllabilityInput = document.getElementById('componentControllabilityInput');
-
-        const name = nameInput ? nameInput.value.trim() : '';
-        const category = categoryInput ? categoryInput.value : '';
-        const description = descInput ? descInput.value.trim() : '';
-        const severity = severityInput ? parseInt(severityInput.value) : 0;
-        const exposure = exposureInput ? parseInt(exposureInput.value) : 0;
-        const controllability = controllabilityInput ? parseInt(controllabilityInput.value) : 0;
+    const name = this.componentNameInput ? this.componentNameInput.value.trim() : '';
+    const category = this.componentCategoryInput ? this.componentCategoryInput.value : '';
+    const description = this.componentDescriptionInput ? this.componentDescriptionInput.value.trim() : '';
+    const severity = this.componentSeverityInput ? parseInt(this.componentSeverityInput.value) : 0;
+    const exposure = this.componentExposureInput ? parseInt(this.componentExposureInput.value) : 0;
+    const controllability = this.componentControllabilityInput ? parseInt(this.componentControllabilityInput.value) : 0;
 
         if (!name || !category || !description) {
             alert('Please fill in all required fields');
@@ -1093,18 +995,17 @@ Hazards: ${component.potential_hazards.join(', ')}
         this.updateAboutFeature(selectedKey);
 
         const component = this.componentsDB[selectedKey];
+        
         console.log('Component selected:', component.name);
 
         // Update component details immediately
         if (this.componentName) this.componentName.textContent = component.name;
         if (this.componentCategory) this.componentCategory.textContent = component.category;
 
-        // Do not overwrite the About panel here with raw DB description; AI will produce the short 2-3 line summary on analyze
+        // Do not update About panel here with raw DB description; AI generates a summary during analysis
     }
 
     async analyzeComponent() {
-        console.log('Starting component analysis...');
-        
         // Prevent multiple analysis attempts
         if (this.analyzeBtn && this.analyzeBtn.classList.contains('loading')) {
             return;
@@ -1174,7 +1075,6 @@ Format: Return exactly 3 lines, one point per line.`;
         try {
             // Step 1: Automotive validation (skip if from database)
             if (method === 'manual') {
-                console.log('Checking if component is automotive...');
                 const isAutomotive = await this.checkIfAutomotive(component);
                 if (!isAutomotive) {
                     this.showError('This component is not part of an automobile or vehicle subsystem. Please describe a component that is specifically part of automotive systems.');
@@ -1183,16 +1083,13 @@ Format: Return exactly 3 lines, one point per line.`;
             }
 
             // Step 2: Perform ASIL analysis
-            console.log('Performing ASIL analysis...');
             const analysis = await this.performASILAnalysis(component, selectedComponent);
             
             // Step 3: Display comprehensive results
-            console.log('Displaying results...');
             this.displayComprehensiveResults(analysis, selectedComponent);
             
-            // Update analysis count
-            this.analysesCount++;
-            this.updateDashboard();
+            // Update analysis count (centralized to persist and update dashboard)
+            this.incrementAnalysesCount();
             
             // Restore focus to the button when complete
             if (previouslyFocused && previouslyFocused.focus) {
@@ -1616,6 +1513,12 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
                 try {
                     const description = await this.generateAIDescription(value, 'short');
                     this.updateAboutPanel(description.trim());
+                    // Count this as an analysis event (user asked Describe Component -> AI generated output)
+                    try {
+                        this.incrementAnalysesCount();
+                    } catch (incErr) {
+                        console.warn('Failed to increment analysesCount', incErr);
+                    }
                     this.showAboutPanelUpdateFeedback();
                 } catch (error) {
                     console.error('Error generating AI description:', error);
@@ -1909,7 +1812,7 @@ RECOMMENDATIONS: [list 3-5 ISO 26262 safety recommendations]`;
             if (this.exposureMatch) this.exposureMatch.textContent = 'N/A';
             
             if (this.aiControllability) this.aiControllability.textContent = aiAnalysis.controllability.level;
-            if (this.dbControllability) this.dbControllability.textContent = 'N/A';
+                       if (this.dbControllability) this.dbControllability.textContent = 'N/A';
             if (this.controllabilityMatch) this.controllabilityMatch.textContent = 'N/A';
             
             const aiAsilValue = this.calculateASIL(
@@ -2150,79 +2053,23 @@ function setupReducedMotionSupport() {
     });
 }
 
-// Function to remove any demo content that might be lingering
-function removeDemoContent() {
-    // Remove demo animations section if it exists
-    const demoSection = document.querySelector('.demo-animations-section');
-    if (demoSection) {
-        demoSection.remove();
-        console.log('Demo animations section removed');
-    }
-    
-    // Remove any elements with demo-related classes
-    const demoCards = document.querySelectorAll('.demo-card');
-    demoCards.forEach(card => card.remove());
-    
-    const demoGrids = document.querySelectorAll('.demo-cards-grid');
-    demoGrids.forEach(grid => grid.remove());
-    
-    // Remove any elements containing "Animation Showcase"
-    const showcaseElements = Array.from(document.querySelectorAll('*')).filter(el => 
-        el.textContent && el.textContent.includes('Animation Showcase')
-    );
-    showcaseElements.forEach(el => el.remove());
-    
-    console.log('Demo content cleanup complete');
-}
-
 // Initialize the application when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initializing ASIL Calculator v16...');
-        removeDemoContent(); // Remove any demo content first
         setupThemeToggle(); // Add theme toggle before calculator initialization
         setupReducedMotionSupport(); // Add reduced motion support
         window.asilCalculator = new ASILCalculator();
-        setupTabSwitching(); // Add this line for the tab functionality
+        // Tab switching handled by ASILCalculator.init
         setupFooterLinks(); // Add footer functionality
     });
 } else {
     console.log('DOM ready - Initializing ASIL Calculator v16...');
-    removeDemoContent(); // Remove any demo content first
     setupThemeToggle(); // Add theme toggle before calculator initialization
     setupReducedMotionSupport(); // Add reduced motion support
     window.asilCalculator = new ASILCalculator();
-    setupTabSwitching(); // Add this line for the tab functionality
+    // Tab switching handled by ASILCalculator.init
     setupFooterLinks(); // Add footer functionality
-}
-
-// Tab switching functionality for the redesigned Component Analysis panel
-function setupTabSwitching() {
-    const manualTabInput = document.getElementById('manualTabInput');
-    const databaseTabInput = document.getElementById('databaseTabInput');
-    const manualInputPanel = document.getElementById('manualInputPanel');
-    const databaseInputPanel = document.getElementById('databaseInputPanel');
-
-    if (manualTabInput && databaseTabInput && manualInputPanel && databaseInputPanel) {
-        // Set initial state
-        manualInputPanel.style.display = manualTabInput.checked ? 'block' : 'none';
-        databaseInputPanel.style.display = databaseTabInput.checked ? 'block' : 'none';
-
-        // Add event listeners
-        manualTabInput.addEventListener('change', function() {
-            if (this.checked) {
-                manualInputPanel.style.display = 'block';
-                databaseInputPanel.style.display = 'none';
-            }
-        });
-
-        databaseTabInput.addEventListener('change', function() {
-            if (this.checked) {
-                manualInputPanel.style.display = 'none';
-                databaseInputPanel.style.display = 'block';
-            }
-        });
-    }
 }
 
 // Footer links functionality
@@ -2233,7 +2080,7 @@ function setupFooterLinks() {
         footerDatabaseLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (window.asilCalculator) {
-                window.asilCalculator.openDatabaseModal();
+                window.asilCalculator.openModal('database');
             }
         });
     }
@@ -2244,7 +2091,7 @@ function setupFooterLinks() {
         footerAsilGuideLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (window.asilCalculator) {
-                window.asilCalculator.openAsilGuideModal();
+                window.asilCalculator.openModal('asilGuide');
             }
         });
     }
